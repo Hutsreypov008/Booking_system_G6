@@ -26,6 +26,18 @@ export const createApp = async (): Promise<Express> => {
   const authService = new AuthService(userRepository);
   const authController = new AuthController(authService);
 
+  app.get("/", (_req, res) => {
+    res.status(200).json({
+      success: true,
+      message: "Booking System API is running",
+      data: {
+        health: "/api/v1/health",
+        auth: "/api/v1/auth",
+        users: "/api/v1/users",
+      },
+    });
+  });
+
   app.get("/api/v1/health", (_req, res) => {
     res.status(200).json({
       success: true,

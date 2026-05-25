@@ -28,6 +28,23 @@ export class RoomController {
     }
   }
 
+  // Get authenticated owner's room listings
+  async findMine(req: Request, res: Response): Promise<void> {
+    try {
+      const ownerId = getOwnerId(req);
+
+      if (!ownerId) {
+        res.status(401).json({ success: false, message: "Valid owner is required" });
+        return;
+      }
+
+      const rooms = await roomService.getRoomsByOwner(ownerId);
+      sendSuccess(res, "Owner rooms retrieved successfully", rooms);
+    } catch (error) {
+      res.status(500).json({ success: false, message: (error as Error).message });
+    }
+  }
+
   // Create room listing
   async create(req: Request, res: Response): Promise<void> {
     try {
@@ -68,6 +85,38 @@ export class RoomController {
       sendSuccess(res, "Room updated successfully", room);
     } catch (error) {
       res.status(400).json({ success: false, message: (error as Error).message });
+    }
+  }
+
+  // Update room availability
+  async updateAvailability(req: Request, res: Response): Promise<void> {
+    try {
+      const roomId = getRoomId(req);
+      if (!roomId) {
+        res.status(400).json({ success: false, message: "Valid room id is required" });
+        return;
+      }
+      const room = await roomService.updateAvailability(roomId, req.body.isAvailable);
+      sendSuccess(res, "Room availability updated successfully", room);
+    } catch (error) {
+      res.status(400).json({ success: false, message: (error as Error).message });
+    }
+  }
+
+  // Delete room listing
+  async delete(req: Request, res: Response): Promise<void> {
+    try {
+      const roomId = getRoomId(req);
+
+      if (!roomId) {
+        res.status(400).json({ success: false, message: "Valid room id is required" });
+        return;
+      }
+      await roomService.deleteRoom(roomId);
+
+      sendSuccess(res, "Room deleted successfully", null);
+    } catch (error) {
+      res.status(404).json({ success: false, message: (error as Error).message });
     }
   }
 }

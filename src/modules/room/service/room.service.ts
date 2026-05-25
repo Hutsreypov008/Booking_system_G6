@@ -2,7 +2,13 @@ import { CreateRoomDto } from "../dto/create-room.dto";
 import { UpdateRoomDto } from "../dto/update-room.dto";
 import { RoomImage } from "../entity/room-image.entity";
 import { Room } from "../entity/room.entity";
-import { findAllRooms, findRoomById, roomRepository } from "../repository/room.repository";
+import {
+  deleteRoomById,
+  findAllRooms,
+  findRoomById,
+  findRoomsByOwnerId,
+  roomRepository,
+} from "../repository/room.repository";
 
 type CreateRoomInput = {
   ownerId: string;
@@ -44,6 +50,12 @@ export class RoomService {
     return removeRoomsImageBackReferences(rooms);
   }
 
+  // Get room listings owned by one owner
+  async getRoomsByOwner(ownerId: string): Promise<Room[]> {
+    const rooms = await findRoomsByOwnerId(ownerId);
+    return removeRoomsImageBackReferences(rooms);
+  }
+
   async createRoom({ ownerId, roomData, imageFiles = [] }: CreateRoomInput): Promise<Room> {
     const images = createRoomImages(imageFiles);
 
@@ -82,6 +94,28 @@ export class RoomService {
 
     const savedRoom = await roomRepository.save(room);
     return removeImageBackReferences(savedRoom);
+  }
+
+  // Update room availability only
+  async updateAvailability(id: string, isAvailable: boolean): Promise<Room> {
+    const room = await findRoomById(id);
+
+    if (!room) {
+      throw new Error("Room not found");
+    }
+    room.isAvailable = isAvailable;
+
+    const savedRoom = await roomRepository.save(room);
+    return removeImageBackReferences(savedRoom);
+  }
+
+  // Delete room listing
+  async deleteRoom(id: string): Promise<void> {
+    const isDeleted = await deleteRoomById(id);
+
+    if (!isDeleted) {
+      throw new Error("Room not found");
+    }
   }
 }
 

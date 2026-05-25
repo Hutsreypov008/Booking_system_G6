@@ -19,6 +19,8 @@ const validateUpdateAvailability = validateBody(UpdateRoomAvailabilityDto);
 const validateUpdateRoom = validateBody(UpdateRoomDto);
 const findAllRooms = roomController.findAll.bind(roomController);
 const findMyRooms = roomController.findMine.bind(roomController);
+const findRoomAvailability = roomController.findAvailability.bind(roomController);
+const findOneRoom = roomController.findOne.bind(roomController);
 const createRoom = roomController.create.bind(roomController);
 const updateAvailability = roomController.updateAvailability.bind(roomController);
 const updateRoom = roomController.update.bind(roomController);
@@ -53,6 +55,12 @@ router.get("/", findAllRooms);
 
 // Get authenticated owner's room listings
 router.get("/mine", authenticateJWT, allowRoomOwner, findMyRooms);
+
+// Get one room availability
+router.get("/:id/availability", findRoomAvailability);
+
+// Get one room listing detail
+router.get("/:id", findOneRoom);
 
 // Create room listing
 router.post( "/", authenticateJWT,

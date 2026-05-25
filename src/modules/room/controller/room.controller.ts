@@ -53,8 +53,8 @@ const getSearchFilters = (req: Request): SearchRoomDto => {
   };
 };
 
+// Get all room listings
 export class RoomController {
-  // Get all room listings
   async findAll(req: Request, res: Response): Promise<void> {
     try {
       const rooms = await roomService.searchRooms(getSearchFilters(req));
@@ -78,6 +78,40 @@ export class RoomController {
       sendSuccess(res, "Owner rooms retrieved successfully", rooms);
     } catch (error) {
       res.status(500).json({ success: false, message: (error as Error).message });
+    }
+  }
+
+  // Get one room listing detail
+  async findOne(req: Request, res: Response): Promise<void> {
+    try {
+      const roomId = getRoomId(req);
+
+      if (!roomId) {
+        res.status(400).json({ success: false, message: "Valid room id is required" });
+        return;
+      }
+
+      const room = await roomService.getRoomById(roomId);
+      sendSuccess(res, "Room retrieved successfully", room);
+    } catch (error) {
+      res.status(404).json({ success: false, message: (error as Error).message });
+    }
+  }
+
+  // Get one room availability
+  async findAvailability(req: Request, res: Response): Promise<void> {
+    try {
+      const roomId = getRoomId(req);
+
+      if (!roomId) {
+        res.status(400).json({ success: false, message: "Valid room id is required" });
+        return;
+      }
+
+      const availability = await roomService.getRoomAvailability(roomId);
+      sendSuccess(res, "Room availability retrieved successfully", availability);
+    } catch (error) {
+      res.status(404).json({ success: false, message: (error as Error).message });
     }
   }
 

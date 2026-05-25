@@ -58,6 +58,31 @@ export class RoomService {
     return removeRoomsImageBackReferences(rooms);
   }
 
+  // Get one room listing
+  async getRoomById(id: string): Promise<Room> {
+    const room = await findRoomById(id);
+
+    if (!room) {
+      throw new Error("Room not found");
+    }
+
+    return removeImageBackReferences(room);
+  }
+
+  // Get one room availability
+  async getRoomAvailability(id: string): Promise<Pick<Room, "id" | "isAvailable">> {
+    const room = await findRoomById(id);
+
+    if (!room) {
+      throw new Error("Room not found");
+    }
+
+    return {
+      id: room.id,
+      isAvailable: room.isAvailable,
+    };
+  }
+
   // Get room listings owned by one owner
   async getRoomsByOwner(ownerId: string): Promise<Room[]> {
     const rooms = await findRoomsByOwnerId(ownerId);

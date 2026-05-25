@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
+import { RoomType } from "../../../common/enums/room-type.enum";
 import { sendSuccess } from "../../../common/utils/response";
+import { SearchRoomDto } from "../dto/search-room.dto";
 import { roomService } from "../service/room.service";
 
 // Get owner id from authenticated request
@@ -17,11 +19,45 @@ const getRoomId = (req: Request): string | null => {
   return req.params.id?.trim() || null;
 };
 
+const getQueryValue = (value: unknown): string | undefined => {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+};
+
+const getQueryNumber = (value: unknown): number | undefined => {
+  const queryValue = getQueryValue(value);
+  if (!queryValue) {
+    return undefined;
+  }
+
+  const numberValue = Number(queryValue);
+  return Number.isFinite(numberValue) ? numberValue : undefined;
+};
+
+const normalizeRoomType = (value: unknown): RoomType | undefined => {
+  const queryValue = getQueryValue(value);
+  if (!queryValue) {
+    return undefined;
+  }
+
+  const roomType = queryValue.replace(/[^a-zA-Z]/g, "").toUpperCase();
+  return Object.values(RoomType).includes(roomType as RoomType) ? (roomType as RoomType) : undefined;
+};
+
+const getSearchFilters = (req: Request): SearchRoomDto => {
+  return {
+    search: getQueryValue(req.query.search),
+    location: getQueryValue(req.query.location),
+    type: normalizeRoomType(req.query.type),
+    minPrice: getQueryNumber(req.query.minPrice),
+    maxPrice: getQueryNumber(req.query.maxPrice),
+  };
+};
+
 export class RoomController {
   // Get all room listings
-  async findAll(_req: Request, res: Response): Promise<void> {
+  async findAll(req: Request, res: Response): Promise<void> {
     try {
-      const rooms = await roomService.getRooms();
+      const rooms = await roomService.searchRooms(getSearchFilters(req));
       sendSuccess(res, "Rooms retrieved successfully", rooms);
     } catch (error) {
       res.status(500).json({ success: false, message: (error as Error).message });

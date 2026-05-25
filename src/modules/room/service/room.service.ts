@@ -1,4 +1,5 @@
 import { CreateRoomDto } from "../dto/create-room.dto";
+import { SearchRoomDto } from "../dto/search-room.dto";
 import { UpdateRoomDto } from "../dto/update-room.dto";
 import { RoomImage } from "../entity/room-image.entity";
 import { Room } from "../entity/room.entity";
@@ -8,6 +9,7 @@ import {
   findRoomById,
   findRoomsByOwnerId,
   roomRepository,
+  searchRooms,
 } from "../repository/room.repository";
 
 type CreateRoomInput = {
@@ -47,6 +49,12 @@ export class RoomService {
   // Get all room listings
   async getRooms(): Promise<Room[]> {
     const rooms = await findAllRooms();
+    return removeRoomsImageBackReferences(rooms);
+  }
+
+  // Search and filter room listings
+  async searchRooms(filters: SearchRoomDto): Promise<Room[]> {
+    const rooms = await searchRooms(filters);
     return removeRoomsImageBackReferences(rooms);
   }
 

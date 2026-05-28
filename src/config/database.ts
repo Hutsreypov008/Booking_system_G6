@@ -1,28 +1,45 @@
 import "dotenv/config";
 import "reflect-metadata";
+import mysql from "mysql2/promise";
 import { DataSource } from "typeorm";
-import { Room } from "../modules/room/entity/room.entity";
-import { RoomImage } from "../modules/room/entity/room-image.entity";
+import { env } from "./env";
+import { RoomImage } from "../models/room-image.entity";
+import { Room } from "../models/room.entity";
+
+export const db = mysql.createPool({
+  host: env.database.host,
+  port: env.database.port,
+  user: env.database.user,
+  password: env.database.password,
+  database: env.database.name,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
 
 export const AppDataSource = new DataSource({
   type: "mysql",
-  host: process.env.DATABASE_HOST ?? "localhost",
-  port: Number(process.env.DATABASE_PORT ?? 3306),
-  username: process.env.DATABASE_USER ?? "root",
-  password: process.env.DATABASE_PASSWORD ?? "",
-  database: process.env.DATABASE_NAME ?? "booking_system",
+  host: env.database.host,
+  port: env.database.port,
+  username: env.database.user,
+  password: env.database.password,
+  database: env.database.name,
   entities: [Room, RoomImage],
   synchronize: false,
-  logging: process.env.NODE_ENV === "development",
+  logging: env.nodeEnv === "development",
 });
 
 export const initializeDatabase = async () => {
   try {
+    const connection = await db.getConnection();
+    await connection.ping();
+    connection.release();
+
     if (!AppDataSource.isInitialized) {
       await AppDataSource.initialize();
     }
 
-    console.log("Database connected successfully");
+    console.log("MySQL Connected");
   } catch (err) {
     console.error("Database connection failed", err);
     throw err;
@@ -30,6 +47,6 @@ export const initializeDatabase = async () => {
 };
 
 export const testDBConnection = initializeDatabase;
-export const database = AppDataSource;
+export const database = db;
 
 export default AppDataSource;

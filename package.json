@@ -2,36 +2,10 @@
   "name": "booking-system",
   "version": "1.0.0",
   "description": "Room Booking System",
-  "main": "dist/server.js",
+  "main": "room-booking-system/dist/server.js",
   "scripts": {
-    "dev": "nodemon src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "test:db": "node test-connection.js"
-  },
-  "dependencies": {
-    "bcrypt": "^6.0.0",
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.15.1",
-    "compression": "^1.8.1",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "helmet": "^8.2.0",
-    "jsonwebtoken": "^9.0.3",
-    "mysql2": "^3.22.3",
-    "reflect-metadata": "^0.2.2",
-    "typeorm": "^1.0.0"
-  },
-  "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
-    "@types/compression": "^1.8.1",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^25.9.1",
-    "nodemon": "^3.1.14",
-    "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "dev": "npm --prefix room-booking-system run dev",
+    "build": "npm --prefix room-booking-system run build",
+    "start": "npm --prefix room-booking-system run start"
   }
 }

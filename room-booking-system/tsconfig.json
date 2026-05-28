@@ -5,7 +5,12 @@
     "lib": ["ES2020"],
     "outDir": "./dist",
     "rootDir": "./src",
+    "types": ["node"],
+    "sourceMap": true,
+    "noEmitOnError": true,
     "strict": true,
+    "allowJs": false,
+    "checkJs": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -15,6 +20,6 @@
     "emitDecoratorMetadata": true,
     "strictPropertyInitialization": false
   },
-  "include": ["src/**/*", "src/modules/room/dto/search-room.dto.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

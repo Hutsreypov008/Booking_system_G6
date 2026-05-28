@@ -43,7 +43,7 @@ export class Booking {
     @ManyToOne(() => User, user => user.bookings)
     @JoinColumn({ name: 'user_id' })
     user: User;
-
+    
     @ManyToOne(() => Room, room => room.bookings)
     @JoinColumn({ name: 'room_id' })
     room: Room;

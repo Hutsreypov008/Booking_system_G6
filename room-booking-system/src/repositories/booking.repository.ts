@@ -88,6 +88,18 @@ export class BookingRepository {
         return await query.getMany();
     }
 
+    async expirePastBookings(referenceDate: Date = new Date()): Promise<void> {
+        await this.repository
+            .createQueryBuilder()
+            .update(Booking)
+            .set({ status: BookingStatus.EXPIRED })
+            .where('status IN (:...statuses)', {
+                statuses: [BookingStatus.PENDING, BookingStatus.APPROVED]
+            })
+            .andWhere('checkOutDate < :referenceDate', { referenceDate })
+            .execute();
+    }
+
     async updateStatus(id: string, status: BookingStatus): Promise<void> {
         await this.repository.update(id, { status });
     }

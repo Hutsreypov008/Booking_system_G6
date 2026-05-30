@@ -100,17 +100,24 @@ export class BookingService {
         return booking;
     }
 
+    private async expirePastBookings(): Promise<void> {
+        await this.bookingRepository.expirePastBookings();
+    }
+
     async getUserBookings(userId: string, page: number, limit: number): Promise<{ bookings: Booking[]; total: number }> {
+        await this.expirePastBookings();
         const [bookings, total] = await this.bookingRepository.findByUser(userId, page, limit);
         return { bookings, total };
     }
 
     async getOwnerBookings(ownerId: string, page: number, limit: number): Promise<{ bookings: Booking[]; total: number }> {
+        await this.expirePastBookings();
         const [bookings, total] = await this.bookingRepository.findByOwner(ownerId, page, limit);
         return { bookings, total };
     }
 
     async getBookings(userId: string, userRole: string, page: number, limit: number): Promise<{ bookings: Booking[]; total: number }> {
+        await this.expirePastBookings();
         if (userRole === 'OWNER') {
             return await this.getOwnerBookings(userId, page, limit);
         }
@@ -119,6 +126,7 @@ export class BookingService {
     }
 
     async getBookingById(bookingId: string, userId: string, userRole: string): Promise<Booking> {
+        await this.expirePastBookings();
         const booking = await this.bookingRepository.findById(bookingId);
         
         if (!booking) {
@@ -142,6 +150,7 @@ export class BookingService {
         userRole: string,
         updateData: UpdateBookingDto
     ): Promise<Booking> {
+        await this.expirePastBookings();
         const booking = await this.bookingRepository.findById(bookingId);
 
         if (!booking) {
@@ -155,6 +164,14 @@ export class BookingService {
             throw new AppError('You do not have permission to update this booking', 403);
         }
 
+        if (booking.status === BookingStatus.EXPIRED) {
+            throw new AppError('Expired bookings cannot be modified', 400);
+        }
+
+        if (booking.status === BookingStatus.CANCELLED) {
+            throw new AppError('Cancelled bookings cannot be modified', 400);
+        }
+
         if (
             updateData.roomId === undefined &&
             updateData.checkInDate === undefined &&
@@ -164,8 +181,13 @@ export class BookingService {
             throw new AppError('No booking fields provided to update', 400);
         }
 
-        if (isUser && booking.status !== BookingStatus.PENDING) {
+        if (isUser && booking.status !== BookingStatus.PENDING &&
+            (updateData.roomId || updateData.checkInDate || updateData.checkOutDate)) {
             throw new AppError('Only pending bookings can be edited by the booking user', 400);
+        }
+
+        if (isOwner && (updateData.roomId || updateData.checkInDate || updateData.checkOutDate)) {
+            throw new AppError('Only the booking user can update booking details', 403);
         }
 
         const nextRoomId = updateData.roomId || booking.roomId;
@@ -196,11 +218,11 @@ export class BookingService {
         }
 
         if (updateData.status) {
-            if (!isOwner && updateData.status !== BookingStatus.CANCELLED) {
-                throw new AppError('Only the room owner can change booking status', 403);
+            if (!isUser || updateData.status !== BookingStatus.CANCELLED) {
+                throw new AppError('Status can only be changed to CANCELLED by the booking user', 403);
             }
 
-            updatePayload.status = updateData.status;
+            updatePayload.status = BookingStatus.CANCELLED;
         }
 
         await this.bookingRepository.update(bookingId, updatePayload);
@@ -210,6 +232,7 @@ export class BookingService {
     }
 
     async deleteBooking(bookingId: string, userId: string, userRole: string): Promise<void> {
+        await this.expirePastBookings();
         const booking = await this.bookingRepository.findById(bookingId);
 
         if (!booking) {
@@ -227,6 +250,7 @@ export class BookingService {
     }
 
     async getOwnerContact(bookingId: string, userId: string): Promise<{ name: string; phone: string; email: string }> {
+        await this.expirePastBookings();
         const booking = await this.bookingRepository.findById(bookingId);
         
         if (!booking) {
@@ -251,6 +275,7 @@ export class BookingService {
     }
 
     async approveBooking(bookingId: string, ownerId: string): Promise<Booking> {
+        await this.expirePastBookings();
         const booking = await this.bookingRepository.findById(bookingId);
         
         if (!booking) {
@@ -311,6 +336,7 @@ export class BookingService {
     }
 
     async rejectBooking(bookingId: string, ownerId: string): Promise<Booking> {
+        await this.expirePastBookings();
         const booking = await this.bookingRepository.findById(bookingId);
         
         if (!booking) {
@@ -342,6 +368,7 @@ export class BookingService {
     }
 
     async cancelBooking(bookingId: string, userId: string): Promise<Booking> {
+        await this.expirePastBookings();
         const booking = await this.bookingRepository.findById(bookingId);
         
         if (!booking) {
@@ -358,6 +385,10 @@ export class BookingService {
 
         if (booking.status === BookingStatus.COMPLETED) {
             throw new AppError('Cannot cancel completed booking', 400);
+        }
+
+        if (booking.status === BookingStatus.EXPIRED) {
+            throw new AppError('Cannot cancel expired booking', 400);
         }
 
         if (booking.status === BookingStatus.REJECTED) {

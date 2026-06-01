@@ -48,7 +48,7 @@ export const createApp = async (): Promise<Express> => {
     });
   });
 
-  app.use("/api/v1/auth", createAuthRouter({ authController }));
+  app.use("/api/v1/auth", createAuthRouter({ authController, authMiddleware }));
   app.use("/api/v1/users", createUserRouter({ userController, authMiddleware }));
 
   return app;

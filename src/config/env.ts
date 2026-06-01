@@ -28,7 +28,7 @@ export const env = {
     port: parsePort(readEnv("DATABASE_PORT"), 3306),
     username: readEnv("DATABASE_USER", "root") || "root",
     password: readEnv("DATABASE_PASSWORD", "") ?? "",
-    name: readEnv("DATABASE_NAME", "booking_system") || "booking_system",
+    name: readEnv("DATABASE_NAME", "room_booking_db") || "room_booking_db",
   },
   jwt: {
     secret: readEnv("JWT_SECRET", "change_this_secret") || "change_this_secret",

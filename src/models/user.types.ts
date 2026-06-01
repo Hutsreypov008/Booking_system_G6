@@ -1,4 +1,5 @@
 import { Request } from "express";
+import { RolePermissions } from "./role-permissions";
 
 export interface AuthenticatedUser {
   id: string;
@@ -18,6 +19,7 @@ export interface UserProfileResponse {
   role: string;
   profileImage: string | null;
   createdAt: Date;
+  permissions: RolePermissions;
 }
 
 export interface BookingHistoryQuery {

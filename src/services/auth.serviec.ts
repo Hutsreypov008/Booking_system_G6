@@ -8,10 +8,12 @@ import { LoginDto } from "../Authentication/dto/login.dto";
 import { RegisterDto } from "../Authentication/dto/register.dto";
 import { ResetPasswordDto } from "../Authentication/dto/reset-password.dto";
 import {
+  AuthenticatedUserResponse,
   AuthSuccessResponse,
   AuthUserResponse,
   ForgotPasswordResponse,
 } from "../models/auth.interface";
+import { getRolePermissions } from "../models/role-permissions";
 import { UserRepository } from "../repositories/user.repository";
 
 type UserWithPassword = User & { passwordHash: string };
@@ -55,6 +57,21 @@ export class AuthService {
     }
 
     return this.buildAuthResponse(user);
+  }
+
+  async getCurrentUser(userId: string): Promise<AuthenticatedUserResponse> {
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new AuthModuleError("Authenticated user was not found", 404);
+    }
+
+    const authUser = this.mapUser(user);
+
+    return {
+      user: authUser,
+      permissions: authUser.permissions,
+    };
   }
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<ForgotPasswordResponse> {
@@ -116,10 +133,13 @@ export class AuthService {
         email: authUser.email,
         role: authUser.role,
       }),
+      permissions: authUser.permissions,
     };
   }
 
   private mapUser(user: User | UserWithPassword): AuthUserResponse {
+    const permissions = getRolePermissions(user.role);
+
     return {
       id: user.id,
       name: user.name,
@@ -128,6 +148,7 @@ export class AuthService {
       role: user.role,
       profileImage: user.profileImage,
       createdAt: user.createdAt,
+      permissions,
     };
   }
 }

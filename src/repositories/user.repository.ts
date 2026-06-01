@@ -7,6 +7,7 @@ import {
   PaginatedResult,
   UserProfileResponse,
 } from "../models/user.types";
+import { getRolePermissions } from "../models/role-permissions";
 
 interface BookingHistoryRow {
   id: string;
@@ -174,6 +175,7 @@ export class UserRepository {
       role: user.role,
       profileImage: user.profileImage,
       createdAt: user.createdAt,
+      permissions: getRolePermissions(user.role),
     };
   }
 

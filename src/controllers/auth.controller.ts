@@ -7,6 +7,7 @@ import { LoginDto } from "../Authentication/dto/login.dto";
 import { RegisterDto } from "../Authentication/dto/register.dto";
 import { ResetPasswordDto } from "../Authentication/dto/reset-password.dto";
 import { AuthService } from "../services/auth.serviec";
+import { RequestWithUser } from "../models/user.types";
 
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -34,6 +35,26 @@ export class AuthController {
       return res.status(200).json({
         success: true,
         message: "Login successful",
+        data: result,
+      });
+    } catch (error) {
+      return this.handleError(req, res, error);
+    }
+  };
+
+  me = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const requestWithUser = req as RequestWithUser;
+
+      if (!requestWithUser.user?.id) {
+        throw new AuthModuleError("Authentication is required to access this resource", 401);
+      }
+
+      const result = await this.authService.getCurrentUser(requestWithUser.user.id);
+
+      return res.status(200).json({
+        success: true,
+        message: "Authenticated user fetched successfully",
         data: result,
       });
     } catch (error) {

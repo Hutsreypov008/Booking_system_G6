@@ -1,12 +1,12 @@
 import { DataSource, Repository } from "typeorm";
-import { UserModuleError } from "../errors/user.error";
-import { User } from "../entity/user.entity";
+import { UserModuleError } from "../services/user.error";
+import { User } from "../models/user.entity";
 import {
   BookingHistoryItem,
   BookingHistoryQuery,
   PaginatedResult,
   UserProfileResponse,
-} from "../types/user.types";
+} from "../models/user.types";
 
 interface BookingHistoryRow {
   id: string;

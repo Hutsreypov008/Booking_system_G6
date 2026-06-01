@@ -1,12 +1,12 @@
-import { GetUserBookingHistoryDto } from "../dto/get-user-booking-history.dto";
-import { UpdateUserDto } from "../dto/update-user.dto";
-import { UserModuleError } from "../errors/user.error";
-import { UserRepository } from "../repository/user.repository";
+import { GetUserBookingHistoryDto } from "../Authentication/dto/get-user-booking-history.dto";
+import { UpdateUserDto } from "../Authentication/dto/update-user.dto";
+import { UserModuleError } from "./user.error";
+import { UserRepository } from "../repositories/user.repository";
 import {
   PaginatedResult,
   BookingHistoryItem,
   UserProfileResponse,
-} from "../types/user.types";
+} from "../models/user.types";
 
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}

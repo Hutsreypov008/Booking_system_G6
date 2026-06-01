@@ -1,5 +1,5 @@
 import { RequestHandler, Router } from "express";
-import { UserController } from "../controller/user.controller";
+import { UserController } from "../controllers/user.controller";
 
 interface CreateUserRouterOptions {
   userController: UserController;

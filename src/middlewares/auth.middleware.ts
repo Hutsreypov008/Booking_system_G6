@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import { verifyAccessToken } from "../utils/jwt";
-import { RequestWithUser } from "../../modules/users/types/user.types";
+import { verifyAccessToken } from "../services/jwt";
+import { RequestWithUser } from "../models/user.types";
 
 export const authMiddleware = (
   req: Request,

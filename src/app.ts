@@ -1,14 +1,14 @@
 import express, { Express } from "express";
 import cors from "cors";
 import { appDataSource } from "./config/database";
-import { authMiddleware } from "./common/middleware/auth.middleware";
-import { AuthController } from "./modules/auth/controller/auth.controller";
-import { createAuthRouter } from "./modules/auth/routes/auth.route";
-import { AuthService } from "./modules/auth/service/auth.serviec";
-import { UserController } from "./modules/users/controller/user.controller";
-import { createUserRouter } from "./modules/users/routes/user.route";
-import { UserRepository } from "./modules/users/repository/user.repository";
-import { UserService } from "./modules/users/service/user.service";
+import { authMiddleware } from "./middlewares/auth.middleware";
+import { AuthController } from "./controllers/auth.controller";
+import { createAuthRouter } from "./routes/auth.route";
+import { AuthService } from "./services/auth.serviec";
+import { UserController } from "./controllers/user.controller";
+import { createUserRouter } from "./routes/user.route";
+import { UserRepository } from "./repositories/user.repository";
+import { UserService } from "./services/user.service";
 
 export const createApp = async (): Promise<Express> => {
   if (!appDataSource.isInitialized) {

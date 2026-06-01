@@ -1,18 +1,18 @@
 import { randomUUID } from "crypto";
-import { comparePassword, hashPassword } from "../../../common/utils/bcrypt";
-import { signAccessToken, signResetToken, verifyResetToken } from "../../../common/utils/jwt";
-import { User } from "../../users/entity/user.entity";
-import { AuthModuleError } from "../errors/auth.error";
-import { ForgotPasswordDto } from "../dto/forgot-password.dto";
-import { LoginDto } from "../dto/login.dto";
-import { RegisterDto } from "../dto/register.dto";
-import { ResetPasswordDto } from "../dto/reset-password.dto";
+import { comparePassword, hashPassword } from "./bcrypt";
+import { signAccessToken, signResetToken, verifyResetToken } from "./jwt";
+import { User } from "../models/user.entity";
+import { AuthModuleError } from "./auth.error";
+import { ForgotPasswordDto } from "../Authentication/dto/forgot-password.dto";
+import { LoginDto } from "../Authentication/dto/login.dto";
+import { RegisterDto } from "../Authentication/dto/register.dto";
+import { ResetPasswordDto } from "../Authentication/dto/reset-password.dto";
 import {
   AuthSuccessResponse,
   AuthUserResponse,
   ForgotPasswordResponse,
-} from "../interface/auth.interface";
-import { UserRepository } from "../../users/repository/user.repository";
+} from "../models/auth.interface";
+import { UserRepository } from "../repositories/user.repository";
 
 type UserWithPassword = User & { passwordHash: string };
 

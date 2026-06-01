@@ -1,75 +1,75 @@
 import { plainToInstance, ClassConstructor } from "class-transformer";
 import { validate } from "class-validator";
 import { Request, Response } from "express";
-import { AuthModuleError } from "../errors/auth.error";
-import { ForgotPasswordDto } from "../dto/forgot-password.dto";
-import { LoginDto } from "../dto/login.dto";
-import { RegisterDto } from "../dto/register.dto";
-import { ResetPasswordDto } from "../dto/reset-password.dto";
-import { AuthService } from "../service/auth.serviec";
+import { GetUserBookingHistoryDto } from "../Authentication/dto/get-user-booking-history.dto";
+import { UpdateUserDto } from "../Authentication/dto/update-user.dto";
+import { UserModuleError } from "../services/user.error";
+import { UserService } from "../services/user.service";
+import { RequestWithUser } from "../models/user.types";
 
-export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+export class UserController {
+  constructor(private readonly userService: UserService) {}
 
-  register = async (req: Request, res: Response): Promise<Response> => {
+  getProfile = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const dto = await this.validateDto<RegisterDto>(RegisterDto, req.body);
-      const result = await this.authService.register(dto);
-
-      return res.status(201).json({
-        success: true,
-        message: "User registered successfully",
-        data: result,
-      });
-    } catch (error) {
-      return this.handleError(req, res, error);
-    }
-  };
-
-  login = async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const dto = await this.validateDto<LoginDto>(LoginDto, req.body);
-      const result = await this.authService.login(dto);
+      const userId = this.getAuthenticatedUserId(req);
+      const profile = await this.userService.getProfile(userId);
 
       return res.status(200).json({
         success: true,
-        message: "Login successful",
-        data: result,
+        message: "User profile fetched successfully",
+        data: profile,
       });
     } catch (error) {
       return this.handleError(req, res, error);
     }
   };
 
-  forgotPassword = async (req: Request, res: Response): Promise<Response> => {
+  updateProfile = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const dto = await this.validateDto<ForgotPasswordDto>(ForgotPasswordDto, req.body);
-      const result = await this.authService.forgotPassword(dto);
+      const userId = this.getAuthenticatedUserId(req);
+      const dto = await this.validateDto<UpdateUserDto>(UpdateUserDto, req.body);
+      const profile = await this.userService.updateProfile(userId, dto);
 
       return res.status(200).json({
         success: true,
-        message: result.message,
-        data: result,
+        message: "User profile updated successfully",
+        data: profile,
       });
     } catch (error) {
       return this.handleError(req, res, error);
     }
   };
 
-  resetPassword = async (req: Request, res: Response): Promise<Response> => {
+  getBookingHistory = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const dto = await this.validateDto<ResetPasswordDto>(ResetPasswordDto, req.body);
-      const result = await this.authService.resetPassword(dto);
+      const userId = this.getAuthenticatedUserId(req);
+      const dto = await this.validateDto<GetUserBookingHistoryDto>(
+        GetUserBookingHistoryDto,
+        req.query,
+      );
+      const result = await this.userService.getBookingHistory(userId, dto);
 
       return res.status(200).json({
         success: true,
-        message: result.message,
-        data: result,
+        message: "User booking history fetched successfully",
+        data: result.data,
+        meta: result.meta,
       });
     } catch (error) {
       return this.handleError(req, res, error);
     }
   };
+
+  private getAuthenticatedUserId(req: Request): string {
+    const requestWithUser = req as RequestWithUser;
+
+    if (!requestWithUser.user?.id) {
+      throw new UserModuleError("Authentication is required to access this resource", 401);
+    }
+
+    return requestWithUser.user.id;
+  }
 
   private async validateDto<T extends object>(
     dtoClass: ClassConstructor<T>,
@@ -91,14 +91,17 @@ export class AuthController {
         )
         .filter(Boolean);
 
-      throw new AuthModuleError(messages[0] ?? "Validation failed", 400);
+      throw new UserModuleError(
+        messages[0] ?? "Validation failed for the request payload",
+        400,
+      );
     }
 
     return dto;
   }
 
   private handleError(req: Request, res: Response, error: unknown): Response {
-    if (error instanceof AuthModuleError) {
+    if (error instanceof UserModuleError) {
       return res.status(error.statusCode).json({
         success: false,
         statusCode: error.statusCode,
@@ -113,7 +116,7 @@ export class AuthController {
       success: false,
       statusCode: 500,
       error: "Internal Server Error",
-      message: "Unexpected error occurred while processing the auth request",
+      message: "Unexpected error occurred while processing the user request",
       timestamp: new Date().toISOString(),
       path: req.originalUrl || req.path,
     });

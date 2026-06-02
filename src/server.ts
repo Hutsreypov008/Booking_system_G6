@@ -5,9 +5,13 @@ import { env } from './config/env';
 
 const startServer = async () => {
     try {
-        // 1. Connect Database
-        await AppDataSource.initialize();
-        console.log('Database connected successfully');
+            // 1. Connect Database (optional)
+            try {
+                await AppDataSource.initialize();
+                console.log('Database connected successfully');
+            } catch (dbErr) {
+                console.warn('Database initialization failed — starting in limited mode:', dbErr?.message ?? dbErr);
+            }
 
         // 2. Start Express Server
         const server = app.listen(env.PORT, () => {

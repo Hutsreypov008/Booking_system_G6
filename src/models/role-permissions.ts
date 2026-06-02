@@ -36,7 +36,7 @@ const ownerPermissions: RolePermissions = {
   canRegister: true,
   canLogin: true,
   canViewRooms: true,
-  canBookRoom: true,
+  canBookRoom: false,
   canCreateRoom: true,
   canUpdateOwnRoom: true,
   canDeleteOwnRoom: true,

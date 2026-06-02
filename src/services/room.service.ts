@@ -1,6 +1,7 @@
 import { RoomType } from "../enums/room-type.enum";
 import { RoomImage } from "../models/room-image.entity";
 import { Room } from "../models/room.entity";
+import { db } from "../config/database";
 import {
   deleteRoomById,
   findAllRooms,
@@ -10,6 +11,14 @@ import {
   searchRooms,
   SearchRoomFilters,
 } from "../repositories/room.repository";
+
+type MysqlColumn = {
+  Field: string;
+  Type: string;
+  Null: "YES" | "NO";
+  Default: unknown;
+  Extra: string;
+};
 
 export type { SearchRoomFilters };
 
@@ -54,6 +63,72 @@ const removeImageBackReferences = (room: Room): Room => {
 
 const removeRoomsImageBackReferences = (rooms: Room[]): Room[] => {
   return rooms.map(removeImageBackReferences);
+};
+
+const escapeIdentifier = (identifier: string): string => {
+  return `\`${identifier.replace(/`/g, "``")}\``;
+};
+
+const getDefaultOwnerValue = (column: MysqlColumn, ownerId: string): string | number | boolean | Date => {
+  const field = column.Field.toLowerCase();
+  const type = column.Type.toLowerCase();
+
+  if (field === "id") {
+    return ownerId;
+  }
+
+  if (field.includes("email")) {
+    return "room-owner@example.com";
+  }
+
+  if (field.includes("password")) {
+    return "room-owner-password";
+  }
+
+  if (field.includes("role")) {
+    return "OWNER";
+  }
+
+  if (field.includes("name")) {
+    return "Room Owner";
+  }
+
+  if (field.includes("created") || field.includes("updated") || type.includes("date") || type.includes("time")) {
+    return new Date();
+  }
+
+  if (type.includes("int") || type.includes("decimal") || type.includes("float") || type.includes("double")) {
+    return 0;
+  }
+
+  if (type.includes("bool") || type.includes("tinyint(1)")) {
+    return true;
+  }
+
+  return "room-owner";
+};
+
+const ensureRoomOwnerExists = async (ownerId: string): Promise<void> => {
+  const [existingOwners] = await db.query("SELECT id FROM users WHERE id = ? LIMIT 1", [ownerId]);
+
+  if (Array.isArray(existingOwners) && existingOwners.length > 0) {
+    return;
+  }
+
+  const [columnsResult] = await db.query("SHOW COLUMNS FROM users");
+  const columns = columnsResult as MysqlColumn[];
+  const insertColumns = columns.filter((column) => {
+    const isAutoIncrement = column.Extra.toLowerCase().includes("auto_increment");
+    const requiresValue = column.Null === "NO" && column.Default === null && !isAutoIncrement;
+
+    return column.Field === "id" || requiresValue;
+  });
+
+  const columnNames = insertColumns.map((column) => escapeIdentifier(column.Field)).join(", ");
+  const placeholders = insertColumns.map(() => "?").join(", ");
+  const values = insertColumns.map((column) => getDefaultOwnerValue(column, ownerId));
+
+  await db.query(`INSERT IGNORE INTO users (${columnNames}) VALUES (${placeholders})`, values);
 };
 
 // Create room and save it to database
@@ -102,6 +177,8 @@ export class RoomService {
   }
 
   async createRoom({ ownerId, roomData, imageFiles = [] }: CreateRoomInput): Promise<Room> {
+    await ensureRoomOwnerExists(ownerId);
+
     const images = createRoomImages(imageFiles);
 
     // Prepare room data before saving

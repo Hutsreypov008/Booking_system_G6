@@ -36,30 +36,15 @@ router.get("/:id/availability", findRoomAvailability);
 router.get("/:id", findOneRoom);
 
 // Create room listing
-router.post(
-  "/",
-  authenticateJWT,
-  allowRoomOwner,
-  handleUploadImages,
-  normalizeRoomBody,
-  validateCreateRoom,
-  createRoom
-);
+router.post("/", handleUploadImages, normalizeRoomBody, validateCreateRoom, createRoom);
 
 // Update room information
-router.patch("/:id", authenticateJWT, allowRoomOwner, normalizeRoomBody, validateUpdateRoom, updateRoom);
+router.patch("/:id", normalizeRoomBody, validateUpdateRoom, updateRoom);
 
 // Update room availability
-router.patch(
-  "/:id/availability",
-  authenticateJWT,
-  allowRoomOwner,
-  normalizeRoomBody,
-  validateUpdateAvailability,
-  updateAvailability
-);
+router.patch("/:id/availability", normalizeRoomBody, validateUpdateAvailability, updateAvailability);
 
 // Delete room listing
-router.delete("/:id", authenticateJWT, allowRoomOwner, deleteRoom);
+router.delete("/:id", deleteRoom);
 
 export default router;

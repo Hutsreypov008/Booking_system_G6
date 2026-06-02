@@ -19,6 +19,7 @@ export const createAuthRouter = ({
 
   if (authMiddleware) {
     router.get("/me", authMiddleware, authController.me);
+    router.get("/profile", authMiddleware, authController.me);
   }
 
   return router;

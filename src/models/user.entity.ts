@@ -1,4 +1,5 @@
 import { Column, CreateDateColumn, Entity, PrimaryColumn } from "typeorm";
+import { Role } from "../enums/role.enum";
 
 @Entity({ name: "users" })
 export class User {
@@ -17,8 +18,8 @@ export class User {
   @Column({ type: "varchar", length: 20, nullable: true })
   phone!: string | null;
 
-  @Column({ type: "varchar", length: 20 })
-  role!: string;
+  @Column({ type: "varchar", length: 20, default: Role.USER })
+  role!: Role;
 
   @Column({ name: "profile_image", type: "text", nullable: true })
   profileImage!: string | null;

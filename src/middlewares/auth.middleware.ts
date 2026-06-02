@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { isRole } from "../enums/role.enum";
 import { verifyAccessToken } from "../services/jwt";
 import { RequestWithUser } from "../models/user.types";
 
@@ -24,6 +25,18 @@ export const authMiddleware = (
 
   try {
     const payload = verifyAccessToken(token);
+
+    if (!isRole(payload.role)) {
+      return res.status(401).json({
+        success: false,
+        statusCode: 401,
+        error: "Unauthorized",
+        message: "Access token contains an unsupported role",
+        timestamp: new Date().toISOString(),
+        path: req.originalUrl || req.path,
+      });
+    }
+
     const requestWithUser = req as RequestWithUser;
 
     requestWithUser.user = {

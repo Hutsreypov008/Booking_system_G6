@@ -6,7 +6,7 @@ export interface AuthUserResponse {
   name: string;
   email: string;
   phone: string | null;
-  role: Role | string;
+  role: Role;
   profileImage: string | null;
   createdAt: Date;
   permissions: RolePermissions;

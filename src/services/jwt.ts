@@ -1,4 +1,5 @@
 import jwt, { SignOptions } from "jsonwebtoken";
+import { env } from "../config/env";
 
 export interface JwtPayload {
   sub: string;
@@ -7,18 +8,18 @@ export interface JwtPayload {
   type?: string;
 }
 
-const DEFAULT_ACCESS_SECRET = "booking-system-access-secret";
-const DEFAULT_RESET_SECRET = "booking-system-reset-secret";
-
 const getAccessTokenSecret = (): string => {
-  return process.env.JWT_SECRET || DEFAULT_ACCESS_SECRET;
+  return env.jwt.secret;
 };
 
 const getResetTokenSecret = (): string => {
-  return process.env.JWT_RESET_SECRET || DEFAULT_RESET_SECRET;
+  return env.jwt.resetSecret;
 };
 
-export const signAccessToken = (payload: JwtPayload, expiresIn: string = "1d"): string => {
+export const signAccessToken = (
+  payload: JwtPayload,
+  expiresIn: string = env.jwt.expiresIn,
+): string => {
   const options: SignOptions = { expiresIn: expiresIn as SignOptions["expiresIn"] };
   return jwt.sign(payload, getAccessTokenSecret(), options);
 };
@@ -29,7 +30,7 @@ export const verifyAccessToken = (token: string): JwtPayload => {
 
 export const signResetToken = (
   payload: Omit<JwtPayload, "type">,
-  expiresIn: string = "15m",
+  expiresIn: string = env.jwt.resetExpiresIn,
 ): string => {
   const options: SignOptions = { expiresIn: expiresIn as SignOptions["expiresIn"] };
   return jwt.sign({ ...payload, type: "reset-password" }, getResetTokenSecret(), options);

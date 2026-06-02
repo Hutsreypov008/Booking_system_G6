@@ -1,7 +1,10 @@
 import express, { Express } from "express";
 import cors from "cors";
 import { appDataSource } from "./config/database";
+import { env } from "./config/env";
+import { errorMiddleware, notFoundMiddleware } from "./middlewares/error.middleware";
 import { authMiddleware } from "./middlewares/auth.middleware";
+import { createRateLimiter, securityHeaders } from "./middlewares/security.middleware";
 import { AuthController } from "./controllers/auth.controller";
 import { createAuthRouter } from "./routes/auth.route";
 import { AuthService } from "./services/auth.serviec";
@@ -16,8 +19,22 @@ export const createApp = async (): Promise<Express> => {
   }
 
   const app = express();
-  app.use(cors());
-  app.use(express.json());
+  app.disable("x-powered-by");
+  app.set("trust proxy", 1);
+  app.use(securityHeaders);
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin || env.corsOrigins.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+
+        callback(null, false);
+      },
+    }),
+  );
+  app.use(express.json({ limit: env.jsonBodyLimit }));
 
   const userRepository = UserRepository.fromDataSource(appDataSource);
   const userService = new UserService(userRepository);
@@ -28,28 +45,24 @@ export const createApp = async (): Promise<Express> => {
 
   app.get("/", (_req, res) => {
     res.status(200).json({
-      success: true,
       message: "Booking System API is running",
-      data: {
-        health: "/api/v1/health",
-        auth: "/api/v1/auth",
-        users: "/api/v1/users",
-      },
     });
   });
 
   app.get("/api/v1/health", (_req, res) => {
     res.status(200).json({
-      success: true,
       message: "Server is healthy",
-      data: {
-        database: "connected",
-      },
     });
   });
 
-  app.use("/api/v1/auth", createAuthRouter({ authController, authMiddleware }));
+  app.use(
+    "/api/v1/auth",
+    createRateLimiter({ windowMs: 15 * 60 * 1000, maxRequests: 30 }),
+    createAuthRouter({ authController, authMiddleware }),
+  );
   app.use("/api/v1/users", createUserRouter({ userController, authMiddleware }));
+  app.use(notFoundMiddleware);
+  app.use(errorMiddleware);
 
   return app;
 };

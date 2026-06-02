@@ -1,5 +1,7 @@
 import { RequestHandler, Router } from "express";
 import { UserController } from "../controllers/user.controller";
+import { Role } from "../enums/role.enum";
+import { authorizeRoles } from "../middlewares/role.middleware";
 
 interface CreateUserRouterOptions {
   userController: UserController;
@@ -16,9 +18,11 @@ export const createUserRouter = ({
     router.use(authMiddleware);
   }
 
-  router.get("/me", userController.getProfile);
-  router.patch("/me", userController.updateProfile);
-  router.get("/me/bookings", userController.getBookingHistory);
+  router.use(authorizeRoles(Role.USER, Role.OWNER));
+
+  router.get("/profile", userController.getProfile);
+  router.patch("/profile", userController.updateProfile);
+  router.get("/profile/bookings", userController.getBookingHistory);
 
   return router;
 };

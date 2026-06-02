@@ -15,6 +15,8 @@ import {
 } from "../models/auth.interface";
 import { getRolePermissions } from "../models/role-permissions";
 import { UserRepository } from "../repositories/user.repository";
+import { Role } from "../enums/role.enum";
+import { env } from "../config/env";
 
 type UserWithPassword = User & { passwordHash: string };
 
@@ -34,7 +36,7 @@ export class AuthService {
       email: registerDto.email,
       passwordHash: await hashPassword(registerDto.password),
       phone: registerDto.phone ?? null,
-      role: registerDto.role,
+      role: registerDto.role ?? Role.USER,
       profileImage: null,
     });
 
@@ -93,7 +95,7 @@ export class AuthService {
       message:
         "Password reset token generated successfully. Connect an email service later to send this token.",
       resetToken,
-      expiresIn: "15m",
+      expiresIn: env.jwt.resetExpiresIn,
     };
   }
 
@@ -116,7 +118,10 @@ export class AuthService {
       throw new AuthModuleError("User not found for this reset token", 404);
     }
 
-    await this.userRepository.updatePassword(user.id, await hashPassword(resetPasswordDto.newPassword));
+    await this.userRepository.updatePassword(
+      user.id,
+      await hashPassword(resetPasswordDto.newPassword),
+    );
 
     return {
       message: "Password reset successfully",

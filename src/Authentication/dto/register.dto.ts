@@ -29,6 +29,9 @@ export class RegisterDto {
   phone?: string;
 
   @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === "string" ? value.trim().toUpperCase() : value,
+  )
   @IsEnum(Role)
   role: Role = Role.USER;
 }

@@ -3,6 +3,9 @@ import { IsString, Length, Matches } from "class-validator";
 
 export class ResetPasswordDto {
   @IsString()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === "string" ? value.trim() : value,
+  )
   token!: string;
 
   @IsString()

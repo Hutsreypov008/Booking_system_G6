@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { Role } from "../enums/role.enum";
+import { isRole, Role } from "../enums/role.enum";
 import { RequestWithUser } from "../models/user.types";
 import { getRolePermissions, RolePermissionKey } from "../models/role-permissions";
 
@@ -19,11 +19,11 @@ export const authorizeRoles = (...allowedRoles: Role[]) => {
     const requestWithUser = req as RequestWithUser;
     const role = requestWithUser.user?.role;
 
-    if (!role) {
+    if (!isRole(role)) {
       return forbiddenResponse(req, res, "Authentication role is required");
     }
 
-    if (!allowedRoles.includes(role as Role)) {
+    if (!allowedRoles.includes(role)) {
       return forbiddenResponse(req, res, "You do not have permission to access this resource");
     }
 
@@ -36,7 +36,7 @@ export const authorizePermission = (permission: RolePermissionKey) => {
     const requestWithUser = req as RequestWithUser;
     const role = requestWithUser.user?.role;
 
-    if (!role) {
+    if (!isRole(role)) {
       return forbiddenResponse(req, res, "Authentication role is required");
     }
 

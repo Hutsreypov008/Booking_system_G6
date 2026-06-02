@@ -29,3 +29,5 @@ export const validateDto = (dtoClass: any) => {
         next();
     };
 };
+
+export const validateBody = validateDto;

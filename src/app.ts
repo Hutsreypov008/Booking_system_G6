@@ -2,14 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
+import path from 'path';
 import { errorHandler } from './middlewares/error.middleware';
 
 // Import routes
-import authRoutes from './routes/auth.route';
-import userRoutes from './routes/user.route';
 import roomRoutes from './routes/room.route';
-import bookingRoutes from './routes/booking.route';
-import imageRoutes from './routes/image.route';
 
 const app = express();
 
@@ -21,6 +18,7 @@ app.use(cors());
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 /* ========================
    REQUEST LOGGER
@@ -38,16 +36,8 @@ app.use((req, res, next) => {
 /* ========================
    API ROUTES (IMPORTANT)
 ======================== */
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
 app.use('/api/rooms', roomRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/images', imageRoutes);
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/rooms', roomRoutes);
-app.use('/api/v1/bookings', bookingRoutes);
-app.use('/api/v1/images', imageRoutes);
 
 /* ========================
    ROOT
@@ -59,15 +49,9 @@ app.get('/', (req, res) => {
         datetime: new Date().toISOString(),
         endpoints: {
             health: '/health',
-            auth: '/api/auth',
-            users: '/api/users',
             rooms: '/api/rooms',
-            bookings: '/api/bookings',
             v1: {
-                auth: '/api/v1/auth',
-                users: '/api/v1/users',
-                rooms: '/api/v1/rooms',
-                bookings: '/api/v1/bookings'
+                rooms: '/api/v1/rooms'
             }
         }
     });

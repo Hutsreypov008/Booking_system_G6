@@ -1,18 +1,32 @@
-import { NextFunction, Request, Response } from "express";
-import { Role } from "../enums/role.enum";
+import { Response, NextFunction } from 'express';
+import { AuthRequest } from './auth.middleware';
 
-export const requireRole =
-  (allowedRoles: Role[]) =>
-  (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      res.status(401).json({ success: false, message: "Authentication required" });
-      return;
-    }
+export const requireRole = (roles: string[]) => {
+    return (req: AuthRequest, res: Response, next: NextFunction): void => {
+        if (!req.user) {
+            res.status(401).json({
+                success: false,
+                statusCode: 401,
+                error: 'Unauthorized',
+                message: 'Authentication required',
+                datetime: new Date().toISOString(),
+                path: req.path
+            });
+            return;
+        }
 
-    if (!allowedRoles.includes(req.user.role)) {
-      res.status(403).json({ success: false, message: "Permission denied" });
-      return;
-    }
+        if (!roles.includes(req.user.role)) {
+            res.status(403).json({
+                success: false,
+                statusCode: 403,
+                error: 'Forbidden',
+                message: 'Insufficient permissions',
+                datetime: new Date().toISOString(),
+                path: req.path
+            });
+            return;
+        }
 
-    next();
-  };
+        next();
+    };
+};

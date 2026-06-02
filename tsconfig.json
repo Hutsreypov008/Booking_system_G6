@@ -1,8 +1,13 @@
 {
   "compilerOptions": {
     "target": "ES2020",
+<<<<<<< HEAD
     "module": "CommonJS",
     "moduleResolution": "Node",
+=======
+    "module": "commonjs",
+    "moduleResolution": "node",
+>>>>>>> feature/room
     "rootDir": "src",
     "outDir": "dist",
     "strict": true,

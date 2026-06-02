@@ -1,0 +1,10 @@
+export enum RoomType {
+  APARTMENT = "APARTMENT",
+  SINGLE = "SINGLE",
+  DOUBLE = "DOUBLE",
+  TWIN = "TWIN",
+  DELUXE = "DELUXE",
+  HOTEL = "HOTEL",
+  STUDIO = "STUDIO",
+  SUITE = "SUITE",
+}

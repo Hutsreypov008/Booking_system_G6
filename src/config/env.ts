@@ -1,37 +1,24 @@
-import fs from "fs";
-import path from "path";
 import dotenv from "dotenv";
 
-const envFilePath = path.resolve(process.cwd(), ".env");
-const fileEnv = fs.existsSync(envFilePath)
-  ? dotenv.parse(fs.readFileSync(envFilePath))
-  : {};
+dotenv.config();
 
-const readEnv = (key: string, fallback?: string): string | undefined => {
-  if (Object.prototype.hasOwnProperty.call(fileEnv, key)) {
-    return fileEnv[key];
-  }
-
-  return process.env[key] ?? fallback;
-};
-
-const parsePort = (value: string | undefined, fallback: number): number => {
-  const parsedValue = Number(value);
-  return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : fallback;
+const toNumber = (value: string | undefined, fallback: number): number => {
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? fallback : parsed;
 };
 
 export const env = {
-  nodeEnv: readEnv("NODE_ENV", "development") || "development",
-  port: parsePort(readEnv("PORT"), 3000),
+  nodeEnv: process.env.NODE_ENV || "development",
+  port: toNumber(process.env.PORT, 3000),
   database: {
-    host: readEnv("DATABASE_HOST", "localhost") || "localhost",
-    port: parsePort(readEnv("DATABASE_PORT"), 3306),
-    username: readEnv("DATABASE_USER", "root") || "root",
-    password: readEnv("DATABASE_PASSWORD", "") ?? "",
-    name: readEnv("DATABASE_NAME", "room_booking_db") || "room_booking_db",
+    host: process.env.DATABASE_HOST || "localhost",
+    port: toNumber(process.env.DATABASE_PORT, 3306),
+    user: process.env.DATABASE_USER || "root",
+    password: process.env.DATABASE_PASSWORD || "",
+    name: process.env.DATABASE_NAME || "booking_system",
   },
   jwt: {
-    secret: readEnv("JWT_SECRET", "change_this_secret") || "change_this_secret",
-    expiresIn: readEnv("JWT_EXPIRES_IN", "1d") || "1d",
+    secret: process.env.JWT_SECRET || "change_this_secret",
+    expiresIn: process.env.JWT_EXPIRES_IN || "1d",
   },
-} as const;
+};

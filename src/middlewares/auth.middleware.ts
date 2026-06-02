@@ -1,8 +1,23 @@
-import { NextFunction, Request, Response } from "express";
+﻿import { NextFunction, Request, Response } from "express";
 import { verifyAccessToken } from "../services/jwt";
-import { RequestWithUser } from "../models/user.types";
+import { Role } from "../enums/role.enum";
 
-export const authMiddleware = (
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        role: Role;
+      };
+    }
+  }
+}
+
+const isRole = (value: string): value is Role => {
+  return Object.values(Role).includes(value as Role);
+};
+
+export const authenticateJWT = (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -24,12 +39,15 @@ export const authMiddleware = (
 
   try {
     const payload = verifyAccessToken(token);
-    const requestWithUser = req as RequestWithUser;
+    const roleValue = payload.role?.toString().toUpperCase();
 
-    requestWithUser.user = {
+    if (!roleValue || !isRole(roleValue)) {
+      throw new Error("Invalid user role");
+    }
+
+    req.user = {
       id: payload.sub,
-      email: payload.email,
-      role: payload.role,
+      role: roleValue,
     };
 
     next();
@@ -44,3 +62,5 @@ export const authMiddleware = (
     });
   }
 };
+
+export const authMiddleware = authenticateJWT;

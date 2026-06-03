@@ -1,0 +1,1 @@
+This file exists to keep track of favorites entity integration fixes.

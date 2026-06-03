@@ -27,11 +27,13 @@ interface BookingHistoryRow {
 type UserProfileUpdate = Partial<Pick<User, "name" | "email" | "phone" | "profileImage">>;
 
 export class UserRepository {
-  constructor(private readonly userRepository: Repository<User>) {}
+  constructor(private readonly userRepository?: Repository<User>) {}
 
+  // allow param-less construction (integration merge compatibility)
   static fromDataSource(dataSource: DataSource): UserRepository {
     return new UserRepository(dataSource.getRepository(User));
   }
+
 
   async findById(userId: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { id: userId } });

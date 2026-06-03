@@ -41,4 +41,7 @@ export class Room {
 
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt!: Date;
+
+  favorites?: any[];
 }
+

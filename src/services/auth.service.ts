@@ -11,9 +11,14 @@ export class AuthService {
     private refreshTokenRepository: RefreshTokenRepository;
 
     constructor() {
-        this.userRepository = new UserRepository();
+        // UserRepository/RefreshTokenRepository are expected to be backed by TypeORM DataSource.
+        // During integration merges, some codepaths instantiate services directly, so we provide a safe fallback.
+        this.userRepository = (UserRepository as any).fromDataSource
+            ? (UserRepository as any).fromDataSource(require('../config/database').AppDataSource)
+            : new UserRepository();
         this.refreshTokenRepository = new RefreshTokenRepository();
     }
+
 
     private generateRefreshToken(): string {
         return crypto.randomBytes(64).toString('hex');

@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+
 const toNumber = (value: string | undefined, fallback: number): number => {
   const parsed = Number(value);
   return Number.isNaN(parsed) ? fallback : parsed;
@@ -17,8 +18,14 @@ export const env = {
     password: process.env.DATABASE_PASSWORD || "",
     name: process.env.DATABASE_NAME || "booking_system",
   },
+
   jwt: {
     secret: process.env.JWT_SECRET || "change_this_secret",
     expiresIn: process.env.JWT_EXPIRES_IN || "1d",
   },
+
+  // aliases for compatibility with utilities added during merge
+  JWT_SECRET: process.env.JWT_SECRET || "change_this_secret",
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "1d",
 };
+

@@ -2,7 +2,11 @@ import { Column, CreateDateColumn, Entity, PrimaryColumn } from "typeorm";
 
 @Entity({ name: "users" })
 export class User {
+  // Favorites relation (required by Favorite entity)
+  favorites?: any[];
+
   @PrimaryColumn("uuid")
+
   id!: string;
 
   @Column({ type: "varchar", length: 100 })
@@ -26,3 +30,5 @@ export class User {
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt!: Date;
 }
+
+

@@ -64,3 +64,6 @@ export const authenticateJWT = (
 };
 
 export const authMiddleware = authenticateJWT;
+// backward-compatible export used by older routes
+export const authenticate = authenticateJWT;
+

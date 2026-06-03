@@ -1,14 +1,17 @@
-import app from "./app";
-import { initializeDatabase } from "./config/database";
+import { createApp } from "./app";
+import { env } from "./config/env";
 
-const PORT = 3000;
+const bootstrap = async (): Promise<void> => {
+  try {
+    const app = await createApp();
 
-initializeDatabase()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server is running at http://localhost:${PORT}`);
+    app.listen(env.port, () => {
+      console.log(`Server running at http://localhost:${env.port}`);
     });
-  })
-  .catch(() => {
+  } catch (error) {
+    console.error("Failed to start server", error);
     process.exit(1);
-  });
+  }
+};
+
+void bootstrap();

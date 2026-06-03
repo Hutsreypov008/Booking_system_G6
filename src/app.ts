@@ -1,89 +1,68 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import compression from 'compression';
-import path from 'path';
-import { errorHandler } from './middlewares/error.middleware';
+import express, { Express } from "express";
+import cors from "cors";
+import { appDataSource } from "./config/database";
+import { env } from "./config/env";
+import { errorMiddleware, notFoundMiddleware } from "./middlewares/error.middleware";
+import { authMiddleware } from "./middlewares/auth.middleware";
+import { createRateLimiter, securityHeaders } from "./middlewares/security.middleware";
+import { AuthController } from "./controllers/auth.controller";
+import { createAuthRouter } from "./routes/auth.route";
+import { AuthService } from "./services/auth.serviec";
+import { UserController } from "./controllers/user.controller";
+import { createUserRouter } from "./routes/user.route";
+import { UserRepository } from "./repositories/user.repository";
+import { UserService } from "./services/user.service";
 
-// Import routes
-import roomRoutes from './routes/room.route';
+export const createApp = async (): Promise<Express> => {
+  if (!appDataSource.isInitialized) {
+    await appDataSource.initialize();
+  }
 
-const app = express();
-
-/* ========================
-   MIDDLEWARE
-======================== */
-app.use(helmet());
-app.use(cors());
-app.use(compression());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
-
-/* ========================
-   REQUEST LOGGER
-======================== */
-app.use((req, res, next) => {
-    console.log(JSON.stringify({
-        level: 'INFO',
-        message: `${req.method} ${req.originalUrl}`,
-        ip: req.ip,
-        datetime: new Date().toISOString()
-    }));
-    next();
-});
-
-/* ========================
-   API ROUTES (IMPORTANT)
-======================== */
-app.use('/api/rooms', roomRoutes);
-app.use('/api/v1/rooms', roomRoutes);
-
-/* ========================
-   ROOT
-======================== */
-app.get('/', (req, res) => {
-    res.status(200).json({
-        success: true,
-        message: 'Room Booking System API is running',
-        datetime: new Date().toISOString(),
-        endpoints: {
-            health: '/health',
-            rooms: '/api/rooms',
-            v1: {
-                rooms: '/api/v1/rooms'
-            }
+  const app = express();
+  app.disable("x-powered-by");
+  app.set("trust proxy", 1);
+  app.use(securityHeaders);
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin || env.corsOrigins.includes(origin)) {
+          callback(null, true);
+          return;
         }
-    });
-});
 
-/* ========================
-   HEALTH CHECK
-======================== */
-app.get('/health', (req, res) => {
+        callback(null, false);
+      },
+    }),
+  );
+  app.use(express.json({ limit: env.jsonBodyLimit }));
+
+  const userRepository = UserRepository.fromDataSource(appDataSource);
+  const userService = new UserService(userRepository);
+  const userController = new UserController(userService);
+
+  const authService = new AuthService(userRepository);
+  const authController = new AuthController(authService);
+
+  app.get("/", (_req, res) => {
     res.status(200).json({
-        status: 'OK',
-        datetime: new Date().toISOString()
+      message: "Booking System API is running",
     });
-});
+  });
 
-/* ========================
-   404 HANDLER
-======================== */
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        statusCode: 404,
-        error: 'Not Found',
-        message: `Cannot ${req.method} ${req.originalUrl}`,
-        datetime: new Date().toISOString(),
-        path: req.originalUrl
+  app.get("/api/v1/health", (_req, res) => {
+    res.status(200).json({
+      message: "Server is healthy",
     });
-});
+  });
 
-/* ========================
-   GLOBAL ERROR HANDLER
-======================== */
-app.use(errorHandler);
+  app.use(
+    "/api/v1/auth",
+    createRateLimiter({ windowMs: 15 * 60 * 1000, maxRequests: 30 }),
+    createAuthRouter({ authController, authMiddleware }),
+  );
+  app.use("/api/v1/users", createUserRouter({ userController, authMiddleware }));
+  app.use(notFoundMiddleware);
+  app.use(errorMiddleware);
 
-export default app;
+  return app;
+};

@@ -1,17 +1,26 @@
-import { Router } from 'express';
-import { AuthController } from '../controllers/auth.controller';
-import { authenticate } from '../middlewares/auth.middleware';
-import { validateDto } from '../middlewares/validation.middleware';
-import { RegisterDto } from '../Authentication/register.dto';
-import { LoginDto } from '../Authentication/login.dto';
-import { RefreshTokenDto } from '../Authentication/refresh-token.dto';
+import { RequestHandler, Router } from "express";
+import { AuthController } from "../controllers/auth.controller";
 
-const router = Router();
-const authController = new AuthController();
+interface CreateAuthRouterOptions {
+  authController: AuthController;
+  authMiddleware?: RequestHandler;
+}
 
-router.post('/register', validateDto(RegisterDto), authController.register);
-router.post('/login', validateDto(LoginDto), authController.login);
-router.post('/refresh', validateDto(RefreshTokenDto), authController.refresh);
-router.post('/logout', authenticate, authController.logout);
+export const createAuthRouter = ({
+  authController,
+  authMiddleware,
+}: CreateAuthRouterOptions): Router => {
+  const router = Router();
 
-export default router;
+  router.post("/register", authController.register);
+  router.post("/login", authController.login);
+  router.post("/forgot-password", authController.forgotPassword);
+  router.post("/reset-password", authController.resetPassword);
+
+  if (authMiddleware) {
+    router.get("/me", authMiddleware, authController.me);
+    router.get("/profile", authMiddleware, authController.me);
+  }
+
+  return router;
+};

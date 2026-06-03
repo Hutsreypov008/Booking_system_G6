@@ -1,41 +1,29 @@
-import { Request, Response, NextFunction } from 'express';
+import { ErrorRequestHandler, RequestHandler } from "express";
 
-export class AppError extends Error {
-    public statusCode: number;
-    public status: string;
+export const notFoundMiddleware: RequestHandler = (req, res) => {
+  res.status(404).json({
+    success: false,
+    statusCode: 404,
+    error: "Not Found",
+    message: "Resource not found",
+    timestamp: new Date().toISOString(),
+    path: req.originalUrl || req.path,
+  });
+};
 
-    constructor(message: string, statusCode: number) {
-        super(message);
-        this.statusCode = statusCode;
-        this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
-        Error.captureStackTrace(this, this.constructor);
-    }
-}
+export const errorMiddleware: ErrorRequestHandler = (error, req, res, _next) => {
+  const statusCode =
+    typeof error?.status === "number" && error.status >= 400 ? error.status : 500;
 
-export const errorHandler = (
-    err: Error | AppError,
-    req: Request,
-    res: Response,
-    next: NextFunction
-): void => {
-    const statusCode = err instanceof AppError ? err.statusCode : 500;
-    const message = err.message || 'Internal Server Error';
-
-    console.error({
-        level: 'ERROR',
-        message: err.message,
-        stack: err.stack,
-        path: req.path,
-        method: req.method,
-        datetime: new Date().toISOString()
-    });
-
-    res.status(statusCode).json({
-        success: false,
-        statusCode: statusCode,
-        error: statusCode === 500 ? 'Internal Server Error' : message,
-        message: statusCode === 500 ? 'Something went wrong' : message,
-        datetime: new Date().toISOString(),
-        path: req.path
-    });
+  res.status(statusCode).json({
+    success: false,
+    statusCode,
+    error: statusCode === 500 ? "Internal Server Error" : "Bad Request",
+    message:
+      statusCode === 500
+        ? "Unexpected error occurred while processing the request"
+        : "Invalid request",
+    timestamp: new Date().toISOString(),
+    path: req.originalUrl || req.path,
+  });
 };

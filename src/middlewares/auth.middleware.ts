@@ -1,52 +1,59 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { env } from '../config/env';
+import { NextFunction, Request, Response } from "express";
+import { isRole } from "../enums/role.enum";
+import { verifyAccessToken } from "../services/jwt";
+import { RequestWithUser } from "../models/user.types";
 
-export type AuthRequest = Request & {
-    user?: {
-        id: string;
-        email: string;
-        role: string;
-    };
-    file?: any;
-};
+export const authMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Response | void => {
+  const authorizationHeader = req.headers.authorization;
 
-export const authenticate = async (
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction
-): Promise<void> => {
-    try {
-        const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!authorizationHeader || !authorizationHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      success: false,
+      statusCode: 401,
+      error: "Unauthorized",
+      message: "Missing or invalid authorization token",
+      timestamp: new Date().toISOString(),
+      path: req.originalUrl || req.path,
+    });
+  }
 
-        if (!token) {
-            res.status(401).json({
-                success: false,
-                statusCode: 401,
-                error: 'Unauthorized',
-                message: 'No token provided',
-                datetime: new Date().toISOString(),
-                path: req.path
-            });
-            return;
-        }
+  const token = authorizationHeader.slice("Bearer ".length).trim();
 
-        const decoded = jwt.verify(token, env.JWT_SECRET) as {
-            id: string;
-            email: string;
-            role: string;
-        };
+  try {
+    const payload = verifyAccessToken(token);
 
-        req.user = decoded;
-        next();
-    } catch (error) {
-        res.status(401).json({
-            success: false,
-            statusCode: 401,
-            error: 'Unauthorized',
-            message: 'Invalid or expired token',
-            datetime: new Date().toISOString(),
-            path: req.path
-        });
+    if (!isRole(payload.role)) {
+      return res.status(401).json({
+        success: false,
+        statusCode: 401,
+        error: "Unauthorized",
+        message: "Access token contains an unsupported role",
+        timestamp: new Date().toISOString(),
+        path: req.originalUrl || req.path,
+      });
     }
+
+    const requestWithUser = req as RequestWithUser;
+
+    requestWithUser.user = {
+      id: payload.sub,
+      email: payload.email,
+      role: payload.role,
+    };
+
+    next();
+  } catch (_error) {
+    return res.status(401).json({
+      success: false,
+      statusCode: 401,
+      error: "Unauthorized",
+      message: "Access token is invalid or expired",
+      timestamp: new Date().toISOString(),
+      path: req.originalUrl || req.path,
+    });
+  }
 };

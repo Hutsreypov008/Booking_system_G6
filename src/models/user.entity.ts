@@ -1,41 +1,29 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from 'typeorm';
-import { Booking } from './booking.entity';
-import { Room } from './room.entity';
-import { Favorite } from './favorite.entity';
-import { UserRole } from './role.enum';
+import { Column, CreateDateColumn, Entity, PrimaryColumn } from "typeorm";
+import { Role } from "../enums/role.enum";
 
-@Entity('users')
+@Entity({ name: "users" })
 export class User {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryColumn("uuid")
+  id!: string;
 
-    @Column({ type: 'varchar', length: 100 })
-    name: string;
+  @Column({ type: "varchar", length: 100 })
+  name!: string;
 
-    @Column({ type: 'varchar', length: 100, unique: true })
-    email: string;
+  @Column({ type: "varchar", length: 100, unique: true })
+  email!: string;
 
-    @Column({ name: 'password_hash', type: 'varchar', length: 255 })
-    passwordHash: string;
+  @Column({ name: "password_hash", type: "varchar", length: 255, select: false })
+  passwordHash!: string;
 
-    @Column({ type: 'varchar', length: 20, nullable: true })
-    phone: string;
+  @Column({ type: "varchar", length: 20, nullable: true })
+  phone!: string | null;
 
-    @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
-    role: UserRole;
+  @Column({ type: "varchar", length: 20, default: Role.USER })
+  role!: Role;
 
-    @Column({ name: 'profile_image', type: 'text', nullable: true })
-    profileImage: string;
+  @Column({ name: "profile_image", type: "text", nullable: true })
+  profileImage!: string | null;
 
-    @CreateDateColumn({ name: 'created_at', type: 'datetime' })
-    createdAt: Date;
-
-    @OneToMany(() => Room, room => room.owner)
-    rooms: Room[];
-
-    @OneToMany(() => Booking, booking => booking.user)
-    bookings: Booking[];
-
-    @OneToMany(() => Favorite, favorite => favorite.user)
-    favorites: Favorite[];
+  @CreateDateColumn({ name: "created_at", type: "timestamp" })
+  createdAt!: Date;
 }

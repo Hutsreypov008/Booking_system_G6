@@ -1,11 +1,28 @@
-import express from "express";
+import { RequestHandler, Router } from "express";
 import { UserController } from "../controllers/user.controller";
+import { Role } from "../enums/role.enum";
+import { authorizeRoles } from "../middlewares/role.middleware";
 
-const router = express.Router();
-const controller = new UserController();
+interface CreateUserRouterOptions {
+  userController: UserController;
+  authMiddleware?: RequestHandler;
+}
 
-router.get("/users", (req, res) => controller.index(req, res));
-router.post("/users", (req, res) => controller.create(req, res));
-router.delete("/users/:id", (req, res) => controller.delete(req, res));
+export const createUserRouter = ({
+  userController,
+  authMiddleware,
+}: CreateUserRouterOptions): Router => {
+  const router = Router();
 
-export default router;
+  if (authMiddleware) {
+    router.use(authMiddleware);
+  }
+
+  router.use(authorizeRoles(Role.USER, Role.OWNER));
+
+  router.get("/profile", userController.getProfile);
+  router.patch("/profile", userController.updateProfile);
+  router.get("/profile/bookings", userController.getBookingHistory);
+
+  return router;
+};

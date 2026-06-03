@@ -9,8 +9,14 @@ export class RoomImage {
   @Column({ name: "room_id", type: "char", length: 36 })
   roomId!: string;
 
-  @Column({ name: "image_url", type: "varchar", length: 255 })
-  imageUrl!: string;
+  @Column({ name: "url", type: "text" })
+  url!: string;
+
+  @Column({ name: "publicId", type: "varchar", length: 255, nullable: true })
+  publicId?: string;
+
+  @Column({ name: "order", type: "int", default: 0 })
+  order!: number;
 
   @ManyToOne(() => Room, (room) => room.images, {
     onDelete: "CASCADE",

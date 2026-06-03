@@ -7,6 +7,7 @@ import {
   BookingHistoryItem,
   UserProfileResponse,
 } from "../models/user.types";
+import { Role } from "../enums/role.enum";
 
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
@@ -50,5 +51,38 @@ export class UserService {
       sortBy: query.sortBy,
       sortOrder: query.sortOrder,
     });
+  }
+
+  async getAllUsers(): Promise<UserProfileResponse[]> {
+    return this.userRepository.findAll();
+  }
+
+  async deleteUser(requesterId: string, targetUserId: string): Promise<void> {
+    const target = await this.userRepository.findById(targetUserId);
+
+    if (!target) {
+      throw new UserModuleError("User not found", 404);
+    }
+
+    if (target.id === requesterId) {
+      throw new UserModuleError("Owners cannot delete themselves", 400);
+    }
+
+    if (target.role === Role.OWNER) {
+      throw new UserModuleError("Cannot delete another owner", 403);
+    }
+
+    try {
+      await this.userRepository.deleteById(targetUserId);
+    } catch (error) {
+      const err = error as { code?: string; errno?: number };
+      if (err.errno === 1451 || err.code === "ER_ROW_IS_REFERENCED_2") {
+        throw new UserModuleError(
+          "Unable to delete user because related records exist. Clear dependent data first.",
+          409,
+        );
+      }
+      throw error;
+    }
   }
 }

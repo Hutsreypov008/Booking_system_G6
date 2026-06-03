@@ -61,6 +61,36 @@ export class UserController {
     }
   };
 
+  getAllUsers = async (_req: Request, res: Response): Promise<Response> => {
+    try {
+      const users = await this.userService.getAllUsers();
+
+      return res.status(200).json({
+        success: true,
+        message: "Users fetched successfully",
+        data: users,
+      });
+    } catch (error) {
+      return this.handleError(_req, res, error);
+    }
+  };
+
+  deleteUser = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const requesterId = req.user?.id as string;
+      const { id } = req.params;
+
+      await this.userService.deleteUser(requesterId, id);
+
+      return res.status(200).json({
+        success: true,
+        message: "User deleted successfully",
+      });
+    } catch (error) {
+      return this.handleError(req, res, error);
+    }
+  };
+
   private getAuthenticatedUserId(req: Request): string {
     const requestWithUser = req as RequestWithUser;
 

@@ -63,7 +63,11 @@ const getSearchFilters = (req: Request): SearchRoomFilters => {
 export class RoomController {
   async findAll(req: Request, res: Response): Promise<void> {
     try {
-      const rooms = await roomService.searchRooms(getSearchFilters(req));
+      const filters = getSearchFilters(req);
+      const rooms = Object.keys(req.query).length > 0
+        ? await roomService.searchRooms(filters)
+        : await roomService.getRooms();
+
       sendSuccess(res, "Rooms retrieved successfully", rooms);
     } catch (error) {
       res.status(500).json({ success: false, message: (error as Error).message });

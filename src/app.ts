@@ -11,6 +11,7 @@ import { createUserRouter } from "./routes/user.route";
 import { UserRepository } from "./repositories/user.repository";
 import { UserService } from "./services/user.service";
 import roomRoutes from "./routes/room.route";
+import bookingRoutes from "./routes/booking.route";
 
 export const createApp = async (): Promise<Express> => {
   if (!AppDataSource.isInitialized) {
@@ -56,6 +57,7 @@ export const createApp = async (): Promise<Express> => {
   app.use("/api/v1/auth", createAuthRouter({ authController, authMiddleware }));
   app.use("/api/v1/users", createUserRouter({ userController, authMiddleware }));
   app.use("/api/v1/rooms", roomRoutes);
+  app.use("/api/v1/bookings", bookingRoutes);
 
   return app;
 };

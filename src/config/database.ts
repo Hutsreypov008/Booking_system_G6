@@ -6,6 +6,7 @@ import { env } from "./env";
 import { RoomImage } from "../models/room-image.entity";
 import { Room } from "../models/room.entity";
 import { User } from "../models/user.entity";
+import { Booking } from "../models/booking.entity";
 
 export const db = mysql.createPool({
   host: env.database.host,
@@ -25,7 +26,7 @@ export const AppDataSource = new DataSource({
   username: env.database.user,
   password: env.database.password,
   database: env.database.name,
-  entities: [User, Room, RoomImage],
+  entities: [User, Room, RoomImage, Booking],
   synchronize: false,
   logging: env.nodeEnv === "development",
 });

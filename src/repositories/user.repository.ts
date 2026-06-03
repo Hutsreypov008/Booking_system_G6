@@ -71,6 +71,28 @@ export class UserRepository {
     return this.mapUserToProfile(user);
   }
 
+  async findAll(): Promise<UserProfileResponse[]> {
+    const users = await this.userRepository.find();
+
+    return users.map((u) => this.mapUserToProfile(u));
+  }
+
+  async deleteById(userId: string): Promise<void> {
+    try {
+      await this.userRepository.manager.query(
+        "DELETE FROM refresh_tokens WHERE user_id = ?",
+        [userId],
+      );
+    } catch (error) {
+      const err = error as { code?: string };
+      if (err.code && err.code !== "ER_NO_SUCH_TABLE") {
+        throw error;
+      }
+    }
+
+    await this.userRepository.delete(userId);
+  }
+
   async updateProfile(userId: string, updates: UserProfileUpdate): Promise<UserProfileResponse> {
     const existingUser = await this.findById(userId);
 

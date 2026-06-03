@@ -39,7 +39,7 @@ const getImageUrl = (file: Express.Multer.File): string => {
 const createRoomImages = (files: Express.Multer.File[] = []): RoomImage[] => {
   return files.map((file) => {
     const image = new RoomImage();
-    image.imageUrl = getImageUrl(file);
+    image.url = getImageUrl(file);
     return image;
   });
 };

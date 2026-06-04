@@ -7,7 +7,9 @@ import {
   findBookingById,
   findBookingByIdForOwner,
   getBookingsByOwner,
+  findOverlappingPendingBookingsByRoom,
 } from "../repositories/booking.repository";
+
 import { BookingModuleError } from "./booking.error";
 import { BookingStatus } from "../enums/booking-status.enum";
 import { CreateBookingDto } from "../Authentication/dto/create-booking.dto";
@@ -57,7 +59,6 @@ export class BookingService {
   }
 
   async updateBookingStatus(ownerId: string, bookingId: string, dto: UpdateBookingDto) {
-
     const booking = await findBookingByIdForOwner(bookingId, ownerId);
 
     if (!booking) {
@@ -68,9 +69,29 @@ export class BookingService {
       throw new BookingModuleError("Cancelled bookings cannot be updated", 400);
     }
 
-    booking.status = dto.status as BookingStatus;
+    const nextStatus = dto.status as BookingStatus;
+
+    // Auto-reject only overlapping PENDING bookings when approving.
+    if (nextStatus === BookingStatus.APPROVED) {
+      const overlappingPendingBookings = await findOverlappingPendingBookingsByRoom(
+        booking.roomId,
+        booking.checkInDate,
+        booking.checkOutDate,
+        booking.id,
+      );
+
+      if (overlappingPendingBookings.length > 0) {
+        for (const pending of overlappingPendingBookings) {
+          pending.status = BookingStatus.REJECTED;
+        }
+        await bookingRepository.save(overlappingPendingBookings);
+      }
+    }
+
+    booking.status = nextStatus;
     return bookingRepository.save(booking);
   }
+
 
 
   async cancelBooking(userId: string, bookingId: string) {

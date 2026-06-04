@@ -32,6 +32,25 @@ export const saveBooking = (booking: Booking): Promise<Booking> => {
   return bookingRepository.save(booking);
 };
 
+// Returns overlapping bookings for the same room that are still PENDING.
+// Overlap rule (half-open interval): existing.checkIn < new.checkOut AND existing.checkOut > new.checkIn
+export const findOverlappingPendingBookingsByRoom = async (
+  roomId: string,
+  checkInDate: string,
+  checkOutDate: string,
+  excludeBookingId: string,
+): Promise<Booking[]> => {
+  return bookingRepository
+    .createQueryBuilder("booking")
+    .where("booking.room_id = :roomId", { roomId })
+    .andWhere("booking.id != :excludeBookingId", { excludeBookingId })
+    .andWhere("booking.status = :status", { status: "PENDING" })
+    .andWhere("booking.check_in_date < :checkOutDate", { checkOutDate })
+    .andWhere("booking.check_out_date > :checkInDate", { checkInDate })
+    .getMany();
+};
+
+
 export const findBookingByIdForOwner = async (
   bookingId: string,
   ownerId: string,
@@ -43,6 +62,7 @@ export const findBookingByIdForOwner = async (
     .andWhere("room.owner_id = :ownerId", { ownerId })
     .getOne();
 };
+
 
 export const getBookingsByOwner = async (
   ownerId: string,

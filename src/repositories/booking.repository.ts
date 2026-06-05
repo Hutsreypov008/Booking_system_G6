@@ -18,14 +18,21 @@ export class BookingRepository {
     async findById(id: string): Promise<Booking | null> {
         return await this.repository.findOne({
             where: { id },
-            relations: ['user', 'room', 'room.owner']
+            relations: {
+                user: true,
+                room: {
+                    owner: true
+                }
+            }
         });
     }
 
     async findByUser(userId: string, page: number = 1, limit: number = 10): Promise<[Booking[], number]> {
         const [bookings, total] = await this.repository.findAndCount({
             where: { userId },
-            relations: ['room'],
+            relations: {
+                room: true
+            },
             order: { createdAt: 'DESC' },
             skip: (page - 1) * limit,
             take: limit
@@ -36,7 +43,9 @@ export class BookingRepository {
     async findByRoom(roomId: string): Promise<Booking[]> {
         return await this.repository.find({
             where: { roomId },
-            relations: ['user']
+            relations: {
+                user: true
+            }
         });
     }
 
@@ -56,7 +65,12 @@ export class BookingRepository {
 
     async findAll(page: number = 1, limit: number = 10): Promise<[Booking[], number]> {
         return await this.repository.findAndCount({
-            relations: ['user', 'room', 'room.owner'],
+            relations: {
+                user: true,
+                room: {
+                    owner: true
+                }
+            },
             order: { createdAt: 'DESC' },
             skip: (page - 1) * limit,
             take: limit

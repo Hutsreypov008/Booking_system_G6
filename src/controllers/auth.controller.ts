@@ -62,6 +62,20 @@ export class AuthController {
     }
   };
 
+  logout = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const result = await this.authService.logout();
+
+      return res.status(200).json({
+        success: true,
+        message: result.message,
+        data: result,
+      });
+    } catch (error) {
+      return this.handleError(req, res, error);
+    }
+  };
+
   forgotPassword = async (req: Request, res: Response): Promise<Response> => {
     try {
       const dto = await this.validateDto<ForgotPasswordDto>(ForgotPasswordDto, req.body);

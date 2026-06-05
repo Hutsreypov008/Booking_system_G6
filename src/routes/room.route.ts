@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { roomController } from "../controllers/room.controller";
+import { authMiddleware } from "../middlewares/auth.middleware";
+import { authorizeRoles } from "../middlewares/role.middleware";
 import { handleUploadImages } from "../middlewares/room-upload.middleware";
 import {
   normalizeRoomBody,
@@ -7,8 +9,10 @@ import {
   validateUpdateAvailability,
   validateUpdateRoom,
 } from "../middlewares/room-validation.middleware";
+import { Role } from "../enums/role.enum";
 
 const router = Router();
+const requireOwner = [authMiddleware, authorizeRoles(Role.OWNER)];
 
 const findAllRooms = roomController.findAll.bind(roomController);
 const findMyRooms = roomController.findMine.bind(roomController);
@@ -23,7 +27,7 @@ const deleteRoom = roomController.delete.bind(roomController);
 router.get("/", findAllRooms);
 
 // Get authenticated owner's room listings
-router.get("/mine", findMyRooms);
+router.get("/mine", requireOwner, findMyRooms);
 
 // Get one room availability
 router.get("/:id/availability", findRoomAvailability);
@@ -32,15 +36,15 @@ router.get("/:id/availability", findRoomAvailability);
 router.get("/:id", findOneRoom);
 
 // Create room listing
-router.post("/", handleUploadImages, normalizeRoomBody, validateCreateRoom, createRoom);
+router.post("/", requireOwner, handleUploadImages, normalizeRoomBody, validateCreateRoom, createRoom);
 
 // Update room information
-router.patch("/:id", normalizeRoomBody, validateUpdateRoom, updateRoom);
+router.patch("/:id", requireOwner, normalizeRoomBody, validateUpdateRoom, updateRoom);
 
 // Update room availability
-router.patch("/:id/availability", normalizeRoomBody, validateUpdateAvailability, updateAvailability);
+router.patch("/:id/availability", requireOwner, normalizeRoomBody, validateUpdateAvailability, updateAvailability);
 
 // Delete room listing
-router.delete("/:id", deleteRoom);
+router.delete("/:id", requireOwner, deleteRoom);
 
 export default router;

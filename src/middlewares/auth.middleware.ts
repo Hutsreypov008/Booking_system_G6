@@ -3,6 +3,8 @@ import { isRole } from "../enums/role.enum";
 import { verifyAccessToken } from "../services/jwt";
 import { RequestWithUser } from "../models/user.types";
 
+export type AuthRequest = RequestWithUser;
+
 export const authMiddleware = (
   req: Request,
   res: Response,
@@ -10,7 +12,7 @@ export const authMiddleware = (
 ): Response | void => {
   const authorizationHeader = req.headers.authorization;
 
-  if (!authorizationHeader || !authorizationHeader.startsWith("Bearer ")) {
+  if (!authorizationHeader?.startsWith("Bearer ")) {
     return res.status(401).json({
       success: false,
       statusCode: 401,
@@ -46,7 +48,7 @@ export const authMiddleware = (
     };
 
     next();
-  } catch (_error) {
+  } catch {
     return res.status(401).json({
       success: false,
       statusCode: 401,
@@ -57,3 +59,5 @@ export const authMiddleware = (
     });
   }
 };
+
+export const authenticate = authMiddleware;

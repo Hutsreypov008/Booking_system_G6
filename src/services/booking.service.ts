@@ -1,6 +1,5 @@
 import { BookingRepository } from '../repositories/booking.repository';
-import { RoomRepository } from '../repositories/room.repository';
-import { UserRepository } from '../repositories/user.repository';
+import { findRoomById } from '../repositories/room.repository';
 import { Booking } from '../models/booking.entity';
 import { CreateBookingDto } from '../models/create-booking.dto';
 import { UpdateBookingDto } from '../models/update-booking.dto';
@@ -9,13 +8,9 @@ import { AppError } from '../middlewares/error.middleware';
 
 export class BookingService {
     private bookingRepository: BookingRepository;
-    private roomRepository: RoomRepository;
-    private userRepository: UserRepository;
 
     constructor() {
         this.bookingRepository = new BookingRepository();
-        this.roomRepository = new RoomRepository();
-        this.userRepository = new UserRepository();
     }
 
     private calculateTotalPrice(pricePerNight: number, checkInDate: Date, checkOutDate: Date): number {
@@ -57,7 +52,7 @@ export class BookingService {
     async createBooking(userId: string, createBookingDto: CreateBookingDto): Promise<Booking> {
         const { roomId, checkInDate, checkOutDate } = createBookingDto;
 
-        const room = await this.roomRepository.findById(roomId);
+        const room = await findRoomById(roomId);
         if (!room) {
             throw new AppError('Room not found', 404);
         }
@@ -196,7 +191,7 @@ export class BookingService {
         const updatePayload: Partial<Booking> = {};
 
         if (updateData.roomId || updateData.checkInDate || updateData.checkOutDate) {
-            const room = await this.roomRepository.findById(nextRoomId);
+            const room = await findRoomById(nextRoomId);
             if (!room) {
                 throw new AppError('Room not found', 404);
             }
@@ -274,7 +269,7 @@ export class BookingService {
         };
     }
 
-    async approveBooking(bookingId: string, ownerId: string): Promise<Booking> {
+    async approveBooking(bookingId: string, ownerId: string, userRole: string): Promise<Booking> {
         await this.expirePastBookings();
         const booking = await this.bookingRepository.findById(bookingId);
         
@@ -282,7 +277,7 @@ export class BookingService {
             throw new AppError('Booking not found', 404);
         }
 
-        if (booking.room.ownerId !== ownerId) {
+        if (userRole !== 'OWNER') {
             throw new AppError('You do not have permission to approve this booking', 403);
         }
 
@@ -335,7 +330,7 @@ export class BookingService {
         return updatedBooking!;
     }
 
-    async rejectBooking(bookingId: string, ownerId: string): Promise<Booking> {
+    async rejectBooking(bookingId: string, ownerId: string, userRole: string): Promise<Booking> {
         await this.expirePastBookings();
         const booking = await this.bookingRepository.findById(bookingId);
         
@@ -343,7 +338,7 @@ export class BookingService {
             throw new AppError('Booking not found', 404);
         }
 
-        if (booking.room.ownerId !== ownerId) {
+        if (userRole !== 'OWNER') {
             throw new AppError('You do not have permission to reject this booking', 403);
         }
 

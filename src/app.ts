@@ -1,6 +1,6 @@
 import express, { Express } from "express";
 import cors from "cors";
-import { appDataSource } from "./config/database";
+import { AppDataSource } from "./config/database";
 import { env } from "./config/env";
 import { errorMiddleware, notFoundMiddleware } from "./middlewares/error.middleware";
 import { authMiddleware } from "./middlewares/auth.middleware";
@@ -12,10 +12,12 @@ import { UserController } from "./controllers/user.controller";
 import { createUserRouter } from "./routes/user.route";
 import { UserRepository } from "./repositories/user.repository";
 import { UserService } from "./services/user.service";
+import roomRouter from "./routes/room.route";
+import bookingRouter from "./routes/booking.route";
 
 export const createApp = async (): Promise<Express> => {
-  if (!appDataSource.isInitialized) {
-    await appDataSource.initialize();
+  if (!AppDataSource.isInitialized) {
+    await AppDataSource.initialize();
   }
 
   const app = express();
@@ -36,7 +38,7 @@ export const createApp = async (): Promise<Express> => {
   );
   app.use(express.json({ limit: env.jsonBodyLimit }));
 
-  const userRepository = UserRepository.fromDataSource(appDataSource);
+  const userRepository = UserRepository.fromDataSource(AppDataSource);
   const userService = new UserService(userRepository);
   const userController = new UserController(userService);
 
@@ -61,6 +63,9 @@ export const createApp = async (): Promise<Express> => {
     createAuthRouter({ authController, authMiddleware }),
   );
   app.use("/api/v1/users", createUserRouter({ userController, authMiddleware }));
+  app.use("/api/v1/rooms", roomRouter);
+  app.use("/api/rooms", roomRouter);
+  app.use("/api/v1/bookings", bookingRouter);
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 

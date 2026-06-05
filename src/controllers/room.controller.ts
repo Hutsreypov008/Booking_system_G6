@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { RoomType } from "../enums/room-type.enum";
 import { roomService, SearchRoomFilters } from "../services/room.service";
 
-const DEFAULT_ROOM_OWNER_ID = "00000000-0000-0000-0000-000000000001";
 
 const sendSuccess = <T>(res: Response, message: string, data: T, statusCode = 200): void => {
   res.status(statusCode).json({
@@ -12,17 +11,17 @@ const sendSuccess = <T>(res: Response, message: string, data: T, statusCode = 20
   });
 };
 
-// Get owner id from authenticated request
+// Read owner id from the logged-in user's token
 const getOwnerId = (req: Request): string | null => {
   return req.user?.id?.trim() || null;
 };
 
-// Get uploaded room images from multer
+// Collect uploaded room image files from request
 const getUploadedFiles = (req: Request): Express.Multer.File[] => {
   return Array.isArray(req.files) ? req.files : [];
 };
 
-// Get room id from route params
+// Read room id from route params
 const getRoomId = (req: Request): string | null => {
   return req.params.id?.trim() || null;
 };
@@ -61,8 +60,8 @@ const getSearchFilters = (req: Request): SearchRoomFilters => {
   };
 };
 
-// Get all room listings
 export class RoomController {
+  // User can view all room listings and filter/search rooms
   async findAll(req: Request, res: Response): Promise<void> {
     try {
       const rooms = await roomService.searchRooms(getSearchFilters(req));
@@ -72,7 +71,7 @@ export class RoomController {
     }
   }
 
-  // Get authenticated owner's room listings
+  // Owner can view only their own room listings
   async findMine(req: Request, res: Response): Promise<void> {
     try {
       const ownerId = getOwnerId(req);
@@ -89,7 +88,7 @@ export class RoomController {
     }
   }
 
-  // Get one room listing detail
+  // User can view detail for one room by room id
   async findOne(req: Request, res: Response): Promise<void> {
     try {
       const roomId = getRoomId(req);
@@ -106,7 +105,7 @@ export class RoomController {
     }
   }
 
-  // Get one room availability
+  // User can check if one room is available
   async findAvailability(req: Request, res: Response): Promise<void> {
     try {
       const roomId = getRoomId(req);
@@ -123,26 +122,31 @@ export class RoomController {
     }
   }
 
-  // Create room listing
+  // Owner can create a new room listing with images
   async create(req: Request, res: Response): Promise<void> {
     try {
-      const ownerId = getOwnerId(req) || DEFAULT_ROOM_OWNER_ID;
+      const ownerId = getOwnerId(req);
 
-      // Send room data and images to service
+      if (!ownerId) {
+        res.status(401).json({ success: false, message: "Valid owner is required" });
+        return;
+      }
+
+      // Save room data and uploaded images
       const room = await roomService.createRoom({
         ownerId,
         roomData: req.body,
         imageFiles: getUploadedFiles(req),
       });
 
-      // Return created room
+      // Return newly created room
       sendSuccess(res, "Room listing created successfully", room, 201);
     } catch (error) {
       res.status(400).json({ success: false, message: (error as Error).message });
     }
   }
 
-  // Update room information
+  // Owner can update room information
   async update(req: Request, res: Response): Promise<void> {
     try {
       const roomId = getRoomId(req);
@@ -157,7 +161,7 @@ export class RoomController {
     }
   }
 
-  // Update room availability
+  // Owner can change room availability status
   async updateAvailability(req: Request, res: Response): Promise<void> {
     try {
       const roomId = getRoomId(req);
@@ -172,7 +176,7 @@ export class RoomController {
     }
   }
 
-  // Delete room listing
+  // Owner can delete a room listing
   async delete(req: Request, res: Response): Promise<void> {
     try {
       const roomId = getRoomId(req);

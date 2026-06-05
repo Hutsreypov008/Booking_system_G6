@@ -1,5 +1,7 @@
-import { Column, CreateDateColumn, Entity, PrimaryColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn } from "typeorm";
 import { Role } from "../enums/role.enum";
+import { Booking } from "./booking.entity";
+import { Room } from "./room.entity";
 
 @Entity({ name: "users" })
 export class User {
@@ -26,4 +28,10 @@ export class User {
 
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt!: Date;
+
+  @OneToMany(() => Room, (room) => room.owner)
+  rooms!: Room[];
+
+  @OneToMany(() => Booking, (booking) => booking.user)
+  bookings!: Booking[];
 }

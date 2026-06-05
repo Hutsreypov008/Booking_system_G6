@@ -128,6 +128,12 @@ export class AuthService {
     };
   }
 
+  async logout(): Promise<{ message: string }> {
+    return {
+      message: "Logout successful. Please remove the access token from the client.",
+    };
+  }
+
   private buildAuthResponse(user: User | UserWithPassword): AuthSuccessResponse {
     const authUser = this.mapUser(user);
 

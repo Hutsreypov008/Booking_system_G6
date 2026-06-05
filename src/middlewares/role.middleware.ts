@@ -31,6 +31,10 @@ export const authorizeRoles = (...allowedRoles: Role[]) => {
   };
 };
 
+export const requireRole = (allowedRoles: string[]) => {
+  return authorizeRoles(...allowedRoles.filter(isRole));
+};
+
 export const authorizePermission = (permission: RolePermissionKey) => {
   return (req: Request, res: Response, next: NextFunction): Response | void => {
     const requestWithUser = req as RequestWithUser;

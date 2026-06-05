@@ -18,6 +18,17 @@ export const createUserRouter = ({
     router.use(authMiddleware);
   }
 
+  router.get(
+    "/owner/profile",
+    authorizeRoles(Role.OWNER),
+    userController.getProfile,
+  );
+  router.patch(
+    "/owner/profile",
+    authorizeRoles(Role.OWNER),
+    userController.updateProfile,
+  );
+
   router.use(authorizeRoles(Role.USER, Role.OWNER));
 
   router.get("/profile", userController.getProfile);

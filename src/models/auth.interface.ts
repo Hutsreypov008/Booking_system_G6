@@ -1,13 +1,15 @@
 import { Role } from "../enums/role.enum";
 import { RolePermissions } from "./role-permissions";
 
+type Nullable<T> = T | null;
+
 export interface AuthUserResponse {
   id: string;
   name: string;
   email: string;
-  phone: string | null;
+  phone: Nullable<string>;
   role: Role;
-  profileImage: string | null;
+  profileImage: Nullable<string>;
   createdAt: Date;
   permissions: RolePermissions;
 }

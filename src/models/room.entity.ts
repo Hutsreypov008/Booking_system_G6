@@ -2,11 +2,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { RoomType } from "../enums/room-type.enum";
+import { Booking } from "./booking.entity";
 import { RoomImage } from "./room-image.entity";
+import { User } from "./user.entity";
 
 @Entity("rooms")
 export class Room {
@@ -15,6 +19,10 @@ export class Room {
 
   @Column({ name: "owner_id", type: "varchar", length: 36 })
   ownerId!: string;
+
+  @ManyToOne(() => User, (user) => user.rooms)
+  @JoinColumn({ name: "owner_id" })
+  owner!: User;
 
   @Column({ type: "varchar", length: 255 })
   title!: string;
@@ -38,6 +46,9 @@ export class Room {
     cascade: true,
   })
   images!: RoomImage[];
+
+  @OneToMany(() => Booking, (booking) => booking.room)
+  bookings!: Booking[];
 
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt!: Date;

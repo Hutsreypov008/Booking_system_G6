@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm';
 import { AppDataSource } from '../config/database';
 import { Booking } from '../models/booking.entity';
-import { BookingStatus } from '../models/booking-status.enum';
+import { BookingStatus } from '../enums/booking-status.enum';
 
 export class BookingRepository {
     private repository: Repository<Booking>;

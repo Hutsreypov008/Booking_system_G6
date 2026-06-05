@@ -6,7 +6,7 @@ import {
     ManyToOne,
     JoinColumn
 } from 'typeorm';
-import { BookingStatus } from './booking-status.enum';
+import { BookingStatus } from '../enums/booking-status.enum';
 import { User } from './user.entity';
 import { Room } from './room.entity';
 

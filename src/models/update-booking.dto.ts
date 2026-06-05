@@ -1,6 +1,6 @@
 import { Transform } from 'class-transformer';
 import { IsDate, IsEnum, IsOptional, IsUUID } from 'class-validator';
-import { BookingStatus } from './booking-status.enum';
+import { BookingStatus } from '../enums/booking-status.enum';
 
 export class UpdateBookingDto {
     @IsUUID()

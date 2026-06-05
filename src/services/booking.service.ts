@@ -3,7 +3,7 @@ import { findRoomById } from '../repositories/room.repository';
 import { Booking } from '../models/booking.entity';
 import { CreateBookingDto } from '../models/create-booking.dto';
 import { UpdateBookingDto } from '../models/update-booking.dto';
-import { BookingStatus } from '../models/booking-status.enum';
+import { BookingStatus } from '../enums/booking-status.enum';
 import { AppError } from '../middlewares/error.middleware';
 
 export class BookingService {

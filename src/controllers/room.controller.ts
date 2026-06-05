@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { RoomType } from "../enums/room-type.enum";
+import { RequestWithUser } from "../models/user.types";
 import { roomService, SearchRoomFilters } from "../services/room.service";
 
 
@@ -13,7 +14,7 @@ const sendSuccess = <T>(res: Response, message: string, data: T, statusCode = 20
 
 // Read owner id from the logged-in user's token
 const getOwnerId = (req: Request): string | null => {
-  return req.user?.id?.trim() || null;
+  return (req as RequestWithUser).user?.id?.trim() || null;
 };
 
 // Collect uploaded room image files from request
@@ -23,7 +24,11 @@ const getUploadedFiles = (req: Request): Express.Multer.File[] => {
 
 // Read room id from route params
 const getRoomId = (req: Request): string | null => {
-  return req.params.id?.trim() || null;
+  return getQueryValue(req.params.id) || null;
+};
+
+const getImageId = (req: Request): string | null => {
+  return getQueryValue(req.params.imageId) || getQueryValue(req.params.id) || null;
 };
 
 const getQueryValue = (value: unknown): string | undefined => {
@@ -188,6 +193,22 @@ export class RoomController {
       await roomService.deleteRoom(roomId);
 
       sendSuccess(res, "Room deleted successfully", null);
+    } catch (error) {
+      res.status(404).json({ success: false, message: (error as Error).message });
+    }
+  }
+
+  async deleteImage(req: Request, res: Response): Promise<void> {
+    try {
+      const imageId = getImageId(req);
+
+      if (!imageId) {
+        res.status(400).json({ success: false, message: "Valid image id is required" });
+        return;
+      }
+
+      await roomService.deleteImage(imageId);
+      sendSuccess(res, "Room image deleted successfully", null);
     } catch (error) {
       res.status(404).json({ success: false, message: (error as Error).message });
     }

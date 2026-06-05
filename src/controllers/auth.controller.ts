@@ -2,10 +2,10 @@ import { plainToInstance, ClassConstructor } from "class-transformer";
 import { validate } from "class-validator";
 import { Request, Response } from "express";
 import { AuthModuleError } from "../services/auth.error";
-import { ForgotPasswordDto } from "../Authentication/dto/forgot-password.dto";
-import { LoginDto } from "../Authentication/dto/login.dto";
-import { RegisterDto } from "../Authentication/dto/register.dto";
-import { ResetPasswordDto } from "../Authentication/dto/reset-password.dto";
+import { ForgotPasswordDto } from "../dto/forgot-password.dto";
+import { LoginDto } from "../dto/login.dto";
+import { RegisterDto } from "../dto/register.dto";
+import { ResetPasswordDto } from "../dto/reset-password.dto";
 import { AuthService } from "../services/auth.serviec";
 import { RequestWithUser } from "../models/user.types";
 
@@ -120,13 +120,13 @@ export class AuthController {
     });
 
     if (errors.length > 0) {
-      const messages = errors
+      const message = errors
         .flatMap((error: { constraints?: Record<string, string> }) =>
           Object.values(error.constraints ?? {}),
         )
-        .filter(Boolean);
+        .find(Boolean);
 
-      throw new AuthModuleError(messages[0] ?? "Validation failed", 400);
+      throw new AuthModuleError(message ?? "Validation failed", 400);
     }
 
     return dto;

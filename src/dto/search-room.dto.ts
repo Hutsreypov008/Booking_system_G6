@@ -1,6 +1,6 @@
 import { IsOptional, IsString, IsNumber, Min, Max, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
-import { RoomType } from './room-type.enum';
+import { RoomType } from '../enums/room-type.enum';
 
 export class SearchRoomDto {
     @IsOptional()

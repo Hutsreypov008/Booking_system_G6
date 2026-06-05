@@ -3,7 +3,7 @@ import { AppDataSource } from '../config/database';
 import { RefreshToken } from '../models/refresh-token.entity';
 
 export class RefreshTokenRepository {
-    private repository: Repository<RefreshToken>;
+    private readonly repository: Repository<RefreshToken>;
 
     constructor() {
         this.repository = AppDataSource.getRepository(RefreshToken);
@@ -17,7 +17,7 @@ export class RefreshTokenRepository {
     async findByToken(token: string): Promise<RefreshToken | null> {
         return await this.repository.findOne({
             where: { token },
-            relations: ['user']
+            relations: { user: true }
         });
     }
 

@@ -1,24 +1,24 @@
 import { IsString, IsNumber, Min, MaxLength, IsEnum, IsOptional, IsBoolean } from 'class-validator';
-import { RoomType } from './room-type.enum';
+import { RoomType } from '../enums/room-type.enum';
 
 export class CreateRoomDto {
     @IsString()
     @MaxLength(255)
-    title: string;
+    title!: string;
 
     @IsString()
-    description: string;
+    description!: string;
 
     @IsString()
     @MaxLength(255)
-    location: string;
+    location!: string;
 
     @IsEnum(RoomType)
-    type: RoomType;
+    type!: RoomType;
 
     @IsNumber()
     @Min(0)
-    price: number;
+    price!: number;
 
     @IsBoolean()
     @IsOptional()

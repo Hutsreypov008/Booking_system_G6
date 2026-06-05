@@ -1,22 +1,23 @@
-import * as crypto from 'crypto';
+import { randomBytes } from 'node:crypto';
 import { UserRepository } from '../repositories/user.repository';
 import { RefreshTokenRepository } from '../repositories/refresh-token.repository';
 import { hashPassword, comparePassword } from '../utils/bcrypt';
 import { generateToken } from '../utils/jwt';
 import { AppError } from '../middlewares/error.middleware';
 import { UserRole } from '../models/role.enum';
+import { AppDataSource } from '../config/database';
 
 export class AuthService {
-    private userRepository: UserRepository;
-    private refreshTokenRepository: RefreshTokenRepository;
+    private readonly userRepository: UserRepository;
+    private readonly refreshTokenRepository: RefreshTokenRepository;
 
     constructor() {
-        this.userRepository = new UserRepository();
+        this.userRepository = UserRepository.fromDataSource(AppDataSource);
         this.refreshTokenRepository = new RefreshTokenRepository();
     }
 
     private generateRefreshToken(): string {
-        return crypto.randomBytes(64).toString('hex');
+        return randomBytes(64).toString('hex');
     }
 
     private async generateTokens(user: any) {
@@ -35,13 +36,14 @@ export class AuthService {
             throw new AppError('Email already registered', 409);
         }
         const hashedPassword = await hashPassword(registerDto.password);
-        const user = await this.userRepository.create({
+        const user = this.userRepository.create({
             name: registerDto.name,
             email: registerDto.email,
             passwordHash: hashedPassword,
             phone: registerDto.phone,
             role: registerDto.role || UserRole.USER
         });
+        await this.userRepository.save(user);
 
         const { accessToken, refreshToken } = await this.generateTokens(user);
 

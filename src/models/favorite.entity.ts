@@ -5,22 +5,22 @@ import { Room } from './room.entity';
 @Entity('favorites')
 export class Favorite {
     @PrimaryGeneratedColumn('uuid')
-    id: string;
+    id!: string;
 
     @Column({ name: 'user_id', type: 'uuid' })
-    userId: string;
+    userId!: string;
 
     @Column({ name: 'room_id', type: 'uuid' })
-    roomId: string;
+    roomId!: string;
 
     @CreateDateColumn({ name: 'created_at', type: 'datetime' })
-    createdAt: Date;
+    createdAt!: Date;
 
-    @ManyToOne(() => User, user => user.favorites)
+    @ManyToOne(() => User)
     @JoinColumn({ name: 'user_id' })
-    user: User;
+    user!: User;
 
-    @ManyToOne(() => Room, room => room.favorites)
+    @ManyToOne(() => Room)
     @JoinColumn({ name: 'room_id' })
-    room: Room;
+    room!: Room;
 }

@@ -4,7 +4,7 @@ import { Booking } from '../models/booking.entity';
 import { BookingStatus } from '../enums/booking-status.enum';
 
 export class BookingRepository {
-    private repository: Repository<Booking>;
+    private readonly repository: Repository<Booking>;
 
     constructor() {
         this.repository = AppDataSource.getRepository(Booking);

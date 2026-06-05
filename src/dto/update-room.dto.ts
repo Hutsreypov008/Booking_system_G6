@@ -1,5 +1,5 @@
 import { IsString, IsNumber, Min, MaxLength, IsEnum, IsOptional, IsBoolean } from 'class-validator';
-import { RoomType } from './room-type.enum';
+import { RoomType } from '../enums/room-type.enum';
 
 export class UpdateRoomDto {
     @IsString()

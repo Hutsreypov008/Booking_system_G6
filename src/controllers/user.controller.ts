@@ -1,8 +1,8 @@
 import { plainToInstance, ClassConstructor } from "class-transformer";
 import { validate } from "class-validator";
 import { Request, Response } from "express";
-import { GetUserBookingHistoryDto } from "../Authentication/dto/get-user-booking-history.dto";
-import { UpdateUserDto } from "../Authentication/dto/update-user.dto";
+import { GetUserBookingHistoryDto } from "../dto/get-user-booking-history.dto";
+import { UpdateUserDto } from "../dto/update-user.dto";
 import { UserModuleError } from "../services/user.error";
 import { UserService } from "../services/user.service";
 import { RequestWithUser } from "../models/user.types";
@@ -85,14 +85,14 @@ export class UserController {
     });
 
     if (errors.length > 0) {
-      const messages = errors
+      const message = errors
         .flatMap((error: { constraints?: Record<string, string> }) =>
           Object.values(error.constraints ?? {}),
         )
-        .filter(Boolean);
+        .find(Boolean);
 
       throw new UserModuleError(
-        messages[0] ?? "Validation failed for the request payload",
+        message ?? "Validation failed for the request payload",
         400,
       );
     }

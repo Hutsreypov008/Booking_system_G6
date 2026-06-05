@@ -4,21 +4,21 @@ import { User } from './user.entity';
 @Entity('refresh_tokens')
 export class RefreshToken {
     @PrimaryGeneratedColumn('uuid')
-    id: string;
+    id!: string;
 
     @Column({ name: 'user_id', type: 'uuid' })
-    userId: string;
+    userId!: string;
 
     @Column({ type: 'text' })
-    token: string;
+    token!: string;
 
     @Column({ type: 'datetime' })
-    expiresAt: Date;
+    expiresAt!: Date;
 
     @CreateDateColumn({ name: 'created_at', type: 'datetime' })
-    createdAt: Date;
+    createdAt!: Date;
 
     @ManyToOne(() => User)
     @JoinColumn({ name: 'user_id' })
-    user: User;
+    user!: User;
 }

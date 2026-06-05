@@ -1,13 +1,18 @@
 import { BookingRepository } from '../repositories/booking.repository';
 import { findRoomById } from '../repositories/room.repository';
 import { Booking } from '../models/booking.entity';
-import { CreateBookingDto } from '../models/create-booking.dto';
-import { UpdateBookingDto } from '../models/update-booking.dto';
+import { CreateBookingDto } from '../dto/create-booking.dto';
+import { UpdateBookingDto } from '../dto/update-booking.dto';
 import { BookingStatus } from '../enums/booking-status.enum';
 import { AppError } from '../middlewares/error.middleware';
 
+type BookingAccess = {
+    isOwner: boolean;
+    isUser: boolean;
+};
+
 export class BookingService {
-    private bookingRepository: BookingRepository;
+    private readonly bookingRepository: BookingRepository;
 
     constructor() {
         this.bookingRepository = new BookingRepository();
@@ -139,26 +144,30 @@ export class BookingService {
         return booking;
     }
 
-    async updateBooking(
-        bookingId: string,
-        userId: string,
-        userRole: string,
-        updateData: UpdateBookingDto
-    ): Promise<Booking> {
-        await this.expirePastBookings();
+    private async getBookingOrFail(bookingId: string): Promise<Booking> {
         const booking = await this.bookingRepository.findById(bookingId);
 
         if (!booking) {
             throw new AppError('Booking not found', 404);
         }
 
-        const isOwner = userRole === 'OWNER' && booking.room.ownerId === userId;
-        const isUser = booking.userId === userId;
+        return booking;
+    }
 
-        if (!isOwner && !isUser) {
+    private getBookingAccess(booking: Booking, userId: string, userRole: string): BookingAccess {
+        return {
+            isOwner: userRole === 'OWNER' && booking.room.ownerId === userId,
+            isUser: booking.userId === userId
+        };
+    }
+
+    private ensureUpdatePermission(access: BookingAccess): void {
+        if (!access.isOwner && !access.isUser) {
             throw new AppError('You do not have permission to update this booking', 403);
         }
+    }
 
+    private ensureBookingIsEditable(booking: Booking): void {
         if (booking.status === BookingStatus.EXPIRED) {
             throw new AppError('Expired bookings cannot be modified', 400);
         }
@@ -166,59 +175,117 @@ export class BookingService {
         if (booking.status === BookingStatus.CANCELLED) {
             throw new AppError('Cancelled bookings cannot be modified', 400);
         }
+    }
 
-        if (
-            updateData.roomId === undefined &&
-            updateData.checkInDate === undefined &&
-            updateData.checkOutDate === undefined &&
-            updateData.status === undefined
-        ) {
+    private ensureUpdateDataProvided(updateData: UpdateBookingDto): void {
+        const providedValues = [
+            updateData.roomId,
+            updateData.checkInDate,
+            updateData.checkOutDate,
+            updateData.status
+        ];
+
+        if (providedValues.every((value) => value === undefined)) {
             throw new AppError('No booking fields provided to update', 400);
         }
+    }
 
-        if (isUser && booking.status !== BookingStatus.PENDING &&
-            (updateData.roomId || updateData.checkInDate || updateData.checkOutDate)) {
+    private hasDetailUpdates(updateData: UpdateBookingDto): boolean {
+        return Boolean(updateData.roomId || updateData.checkInDate || updateData.checkOutDate);
+    }
+
+    private ensureDetailUpdateAllowed(
+        booking: Booking,
+        updateData: UpdateBookingDto,
+        access: BookingAccess
+    ): void {
+        if (!this.hasDetailUpdates(updateData)) {
+            return;
+        }
+
+        if (access.isUser && booking.status !== BookingStatus.PENDING) {
             throw new AppError('Only pending bookings can be edited by the booking user', 400);
         }
 
-        if (isOwner && (updateData.roomId || updateData.checkInDate || updateData.checkOutDate)) {
+        if (access.isOwner) {
             throw new AppError('Only the booking user can update booking details', 403);
+        }
+    }
+
+    private ensureStatusUpdateAllowed(updateData: UpdateBookingDto, access: BookingAccess): void {
+        if (!updateData.status) {
+            return;
+        }
+
+        if (!access.isUser || updateData.status !== BookingStatus.CANCELLED) {
+            throw new AppError('Status can only be changed to CANCELLED by the booking user', 403);
+        }
+    }
+
+    private async buildDetailUpdatePayload(
+        booking: Booking,
+        bookingId: string,
+        updateData: UpdateBookingDto
+    ): Promise<Partial<Booking>> {
+        if (!this.hasDetailUpdates(updateData)) {
+            return {};
         }
 
         const nextRoomId = updateData.roomId || booking.roomId;
         const nextCheckInDate = updateData.checkInDate || booking.checkInDate;
         const nextCheckOutDate = updateData.checkOutDate || booking.checkOutDate;
-        const updatePayload: Partial<Booking> = {};
+        const room = await findRoomById(nextRoomId);
 
-        if (updateData.roomId || updateData.checkInDate || updateData.checkOutDate) {
-            const room = await findRoomById(nextRoomId);
-            if (!room) {
-                throw new AppError('Room not found', 404);
-            }
+        if (!room) {
+            throw new AppError('Room not found', 404);
+        }
 
-            if (!room.isAvailable) {
-                throw new AppError('Room is currently unavailable', 400);
-            }
+        if (!room.isAvailable) {
+            throw new AppError('Room is currently unavailable', 400);
+        }
 
-            await this.validateBookingDates(nextRoomId, nextCheckInDate, nextCheckOutDate, bookingId);
+        await this.validateBookingDates(nextRoomId, nextCheckInDate, nextCheckOutDate, bookingId);
 
-            updatePayload.roomId = nextRoomId;
-            updatePayload.checkInDate = nextCheckInDate;
-            updatePayload.checkOutDate = nextCheckOutDate;
-            updatePayload.totalPrice = this.calculateTotalPrice(
+        return {
+            roomId: nextRoomId,
+            checkInDate: nextCheckInDate,
+            checkOutDate: nextCheckOutDate,
+            totalPrice: this.calculateTotalPrice(
                 Number(room.price),
                 nextCheckInDate,
                 nextCheckOutDate
-            );
+            )
+        };
+    }
+
+    private buildStatusUpdatePayload(updateData: UpdateBookingDto): Partial<Booking> {
+        if (!updateData.status) {
+            return {};
         }
 
-        if (updateData.status) {
-            if (!isUser || updateData.status !== BookingStatus.CANCELLED) {
-                throw new AppError('Status can only be changed to CANCELLED by the booking user', 403);
-            }
+        return { status: BookingStatus.CANCELLED };
+    }
 
-            updatePayload.status = BookingStatus.CANCELLED;
-        }
+    async updateBooking(
+        bookingId: string,
+        userId: string,
+        userRole: string,
+        updateData: UpdateBookingDto
+    ): Promise<Booking> {
+        await this.expirePastBookings();
+        const booking = await this.getBookingOrFail(bookingId);
+        const access = this.getBookingAccess(booking, userId, userRole);
+
+        this.ensureUpdatePermission(access);
+        this.ensureBookingIsEditable(booking);
+        this.ensureUpdateDataProvided(updateData);
+        this.ensureDetailUpdateAllowed(booking, updateData, access);
+        this.ensureStatusUpdateAllowed(updateData, access);
+
+        const updatePayload = {
+            ...(await this.buildDetailUpdatePayload(booking, bookingId, updateData)),
+            ...this.buildStatusUpdatePayload(updateData)
+        };
 
         await this.bookingRepository.update(bookingId, updatePayload);
 

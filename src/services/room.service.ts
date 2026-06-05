@@ -1,7 +1,7 @@
 import { RoomType } from "../enums/room-type.enum";
 import { RoomImage } from "../models/room-image.entity";
 import { Room } from "../models/room.entity";
-import { db } from "../config/database";
+import { AppDataSource, db } from "../config/database";
 import {
   deleteRoomById,
   findAllRooms,
@@ -66,7 +66,7 @@ const removeRoomsImageBackReferences = (rooms: Room[]): Room[] => {
 };
 
 const escapeIdentifier = (identifier: string): string => {
-  return `\`${identifier.replace(/`/g, "``")}\``;
+  return `\`${identifier.replaceAll("`", "``")}\``;
 };
 
 const getDefaultOwnerValue = (column: MysqlColumn, ownerId: string): string | number | boolean | Date => {
@@ -237,6 +237,14 @@ export class RoomService {
 
     if (!isDeleted) {
       throw new Error("Room not found");
+    }
+  }
+
+  async deleteImage(imageId: string): Promise<void> {
+    const result = await AppDataSource.getRepository(RoomImage).delete(imageId);
+
+    if (!result.affected) {
+      throw new Error("Room image not found");
     }
   }
 }

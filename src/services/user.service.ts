@@ -1,5 +1,5 @@
-import { GetUserBookingHistoryDto } from "../Authentication/dto/get-user-booking-history.dto";
-import { UpdateUserDto } from "../Authentication/dto/update-user.dto";
+import { GetUserBookingHistoryDto } from "../dto/get-user-booking-history.dto";
+import { UpdateUserDto } from "../dto/update-user.dto";
 import { UserModuleError } from "./user.error";
 import { UserRepository } from "../repositories/user.repository";
 import {
@@ -7,6 +7,15 @@ import {
   BookingHistoryItem,
   UserProfileResponse,
 } from "../models/user.types";
+
+type UserProfileUpdates = {
+  name?: string;
+  email?: string;
+  phone?: string | null;
+  profileImage?: string | null;
+};
+
+const hasValue = <T>(value: T | undefined): value is T => value !== undefined;
 
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
@@ -16,14 +25,23 @@ export class UserService {
   }
 
   async updateProfile(userId: string, updateUserDto: UpdateUserDto): Promise<UserProfileResponse> {
-    const updates = {
-      ...(updateUserDto.name !== undefined ? { name: updateUserDto.name } : {}),
-      ...(updateUserDto.email !== undefined ? { email: updateUserDto.email.toLowerCase() } : {}),
-      ...(updateUserDto.phone !== undefined ? { phone: updateUserDto.phone } : {}),
-      ...(updateUserDto.profileImage !== undefined
-        ? { profileImage: updateUserDto.profileImage }
-        : {}),
-    };
+    const updates: UserProfileUpdates = {};
+
+    if (hasValue(updateUserDto.name)) {
+      updates.name = updateUserDto.name;
+    }
+
+    if (hasValue(updateUserDto.email)) {
+      updates.email = updateUserDto.email.toLowerCase();
+    }
+
+    if (hasValue(updateUserDto.phone)) {
+      updates.phone = updateUserDto.phone;
+    }
+
+    if (hasValue(updateUserDto.profileImage)) {
+      updates.profileImage = updateUserDto.profileImage;
+    }
 
     if (updates.email) {
       const existingUser = await this.userRepository.findByEmail(updates.email);

@@ -1,12 +1,12 @@
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 import { comparePassword, hashPassword } from "./bcrypt";
 import { signAccessToken, signResetToken, verifyResetToken } from "./jwt";
 import { User } from "../models/user.entity";
 import { AuthModuleError } from "./auth.error";
-import { ForgotPasswordDto } from "../Authentication/dto/forgot-password.dto";
-import { LoginDto } from "../Authentication/dto/login.dto";
-import { RegisterDto } from "../Authentication/dto/register.dto";
-import { ResetPasswordDto } from "../Authentication/dto/reset-password.dto";
+import { ForgotPasswordDto } from "../dto/forgot-password.dto";
+import { LoginDto } from "../dto/login.dto";
+import { RegisterDto } from "../dto/register.dto";
+import { ResetPasswordDto } from "../dto/reset-password.dto";
 import {
   AuthenticatedUserResponse,
   AuthSuccessResponse,
@@ -104,8 +104,8 @@ export class AuthService {
 
     try {
       payload = verifyResetToken(resetPasswordDto.token);
-    } catch (_error) {
-      throw new AuthModuleError("Reset token is invalid or expired", 401);
+    } catch (error) {
+      throw new AuthModuleError("Reset token is invalid or expired", 401, error);
     }
 
     if (payload.type !== "reset-password") {

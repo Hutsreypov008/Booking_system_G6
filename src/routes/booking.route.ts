@@ -3,8 +3,8 @@ import { BookingController } from '../controllers/booking.controller';
 import { authenticate } from '../middlewares/auth.middleware';
 import { requireRole } from '../middlewares/role.middleware';
 import { validateDto } from '../middlewares/validation.middleware';
-import { CreateBookingDto } from '../models/create-booking.dto';
-import { UpdateBookingDto } from '../models/update-booking.dto';
+import { CreateBookingDto } from '../dto/create-booking.dto';
+import { UpdateBookingDto } from '../dto/update-booking.dto';
 
 const router = Router();
 const bookingController = new BookingController();

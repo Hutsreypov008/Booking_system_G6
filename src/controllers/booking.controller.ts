@@ -1,12 +1,12 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { BookingService } from '../services/booking.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { successResponse, paginatedResponse } from '../utils/response';
-import { CreateBookingDto } from '../models/create-booking.dto';
-import { UpdateBookingDto } from '../models/update-booking.dto';
+import { CreateBookingDto } from '../dto/create-booking.dto';
+import { UpdateBookingDto } from '../dto/update-booking.dto';
 
 export class BookingController {
-    private bookingService: BookingService;
+    private readonly bookingService: BookingService;
 
     constructor() {
         this.bookingService = new BookingService();
@@ -34,8 +34,8 @@ export class BookingController {
 
     getMyBookings = async (req: AuthRequest, res: Response): Promise<void> => {
         const userId = req.user!.id;
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 10;
+        const page = Number.parseInt(req.query.page as string) || 1;
+        const limit = Number.parseInt(req.query.limit as string) || 10;
         
         const { bookings, total } = await this.bookingService.getUserBookings(userId, page, limit);
         
@@ -47,8 +47,8 @@ export class BookingController {
     getBookings = async (req: AuthRequest, res: Response): Promise<void> => {
         const userId = req.user!.id;
         const userRole = this.getUserRole(req);
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 10;
+        const page = Number.parseInt(req.query.page as string) || 1;
+        const limit = Number.parseInt(req.query.limit as string) || 10;
 
         const { bookings, total } = await this.bookingService.getBookings(userId, userRole, page, limit);
 
@@ -118,8 +118,8 @@ export class BookingController {
 
     getIncomingRequests = async (req: AuthRequest, res: Response): Promise<void> => {
         const ownerId = req.user!.id;
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 10;
+        const page = Number.parseInt(req.query.page as string) || 1;
+        const limit = Number.parseInt(req.query.limit as string) || 10;
         
         const { bookings, total } = await this.bookingService.getOwnerBookings(ownerId, page, limit);
         
